@@ -653,8 +653,8 @@ public class ServerCnx extends PulsarHandler {
                         if (existingConsumerFuture != null) {
                             if (existingConsumerFuture.isDone() && !existingConsumerFuture.isCompletedExceptionally()) {
                                 Consumer consumer = existingConsumerFuture.getNow(null);
-                                log.info("[{}] Consumer with the same id is already created: {}", remoteAddress,
-                                        consumer);
+                                log.info("[{}] Consumer with the same id {} is already created: {}", remoteAddress,
+                                        consumerId, consumer);
                                 ctx.writeAndFlush(Commands.newSuccess(requestId));
                                 return null;
                             } else {
@@ -663,8 +663,8 @@ public class ServerCnx extends PulsarHandler {
                                 // client timeout is lower the broker timeouts. We need to wait until the previous
                                 // consumer
                                 // creation request either complete or fails.
-                                log.warn("[{}][{}][{}] Consumer is already present on the connection", remoteAddress,
-                                        topicName, subscriptionName);
+                                log.warn("[{}][{}][{}] Consumer with id {} is already present on the connection", remoteAddress,
+                                        topicName, subscriptionName, consumerId);
                                 ServerError error = !existingConsumerFuture.isDone() ? ServerError.ServiceNotReady
                                         : getErrorCode(existingConsumerFuture);
                                 ctx.writeAndFlush(Commands.newError(requestId, error,
@@ -772,30 +772,13 @@ public class ServerCnx extends PulsarHandler {
         });
     }
 
-    private static SchemaType getType(PulsarApi.Schema.Type protocolType) {
-        switch (protocolType) {
-        case None:
-            return SchemaType.NONE;
-        case String:
-            return SchemaType.STRING;
-        case Json:
-            return SchemaType.JSON;
-        case Protobuf:
-            return SchemaType.PROTOBUF;
-        case Avro:
-            return SchemaType.AVRO;
-        default:
-            return SchemaType.NONE;
-        }
-    }
-
     private SchemaData getSchema(PulsarApi.Schema protocolSchema) {
         return SchemaData.builder()
             .data(protocolSchema.getSchemaData().toByteArray())
             .isDeleted(false)
             .timestamp(System.currentTimeMillis())
             .user(Strings.nullToEmpty(originalPrincipal))
-            .type(getType(protocolSchema.getType()))
+            .type(Commands.getSchemaType(protocolSchema.getType()))
             .props(protocolSchema.getPropertiesList().stream().collect(
                 Collectors.toMap(
                     PulsarApi.KeyValue::getKey,
@@ -858,8 +841,8 @@ public class ServerCnx extends PulsarHandler {
                         if (existingProducerFuture != null) {
                             if (existingProducerFuture.isDone() && !existingProducerFuture.isCompletedExceptionally()) {
                                 Producer producer = existingProducerFuture.getNow(null);
-                                log.info("[{}] Producer with the same id is already created: {}", remoteAddress,
-                                        producer);
+                                log.info("[{}] Producer with the same id {} is already created: {}", remoteAddress,
+                                        producerId, producer);
                                 ctx.writeAndFlush(Commands.newProducerSuccess(requestId, producer.getProducerName(),
                                     producer.getSchemaVersion()));
                                 return null;
@@ -873,8 +856,8 @@ public class ServerCnx extends PulsarHandler {
                                 // either complete or fails.
                                 ServerError error = !existingProducerFuture.isDone() ? ServerError.ServiceNotReady
                                         : getErrorCode(existingProducerFuture);
-                                log.warn("[{}][{}] Producer is already present on the connection", remoteAddress,
-                                        topicName);
+                                log.warn("[{}][{}] Producer with id {} is already present on the connection", remoteAddress,
+                                        producerId, topicName);
                                 ctx.writeAndFlush(Commands.newError(requestId, error,
                                         "Producer is already present on the connection"));
                                 return null;

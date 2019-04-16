@@ -220,6 +220,12 @@ public class ServiceConfiguration implements PulsarConfiguration {
             + "'consumer_backlog_eviction' Policy which evicts the oldest message from the slowest consumer's backlog"
     )
     private BacklogQuota.RetentionPolicy backlogQuotaDefaultRetentionPolicy = BacklogQuota.RetentionPolicy.producer_request_hold;
+    @FieldContext(
+            category = CATEGORY_POLICIES,
+            doc = "Default ttl for namespaces if ttl is not already configured at namespace policies. "
+                    + "(disable default-ttl with value 0)"
+        )
+    private int ttlDurationDefaultInSeconds = 0;
 
     @FieldContext(
         category = CATEGORY_POLICIES,
@@ -619,7 +625,7 @@ public class ServiceConfiguration implements PulsarConfiguration {
         category = CATEGORY_SASL_AUTH,
         doc = "Service Principal, for login context name. Default value is \"Broker\"."
     )
-    private String saslJaasBrokerSectionName = SaslConstants.JAAS_DEFAULT_BROKER_SECTION_NAME;
+    private String saslJaasServerSectionName = SaslConstants.JAAS_DEFAULT_BROKER_SECTION_NAME;
 
     @FieldContext(
         category = CATEGORY_SASL_AUTH,

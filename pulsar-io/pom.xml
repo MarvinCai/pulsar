@@ -54,6 +54,8 @@
     <module>mongo</module>
     <module>flume</module>
     <module>redis</module>
+    <module>solr</module>
+    <module>influxdb</module>
   </modules>
 
 </project>
