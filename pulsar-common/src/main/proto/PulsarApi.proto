@@ -180,6 +180,7 @@ enum ProtocolVersion {
 			 // Added CommandGetTopicsOfNamespace
 	v13 = 13; // Schema-registry : added avro schema format for json
 	v14 = 14; // Add CommandAuthChallenge and CommandAuthResponse for mutual auth
+	v15 = 15; // Add batch lookup support
 }
 
 message CommandConnect {
@@ -310,6 +311,12 @@ message CommandLookupTopic {
 	optional string original_auth_method = 6;
 }
 
+message CommandBatchLookupTopic {
+	repeated string topic            = 1;
+	required uint64 request_id       = 2;
+	optional bool authoritative      = 3 [default = false];
+}
+
 message CommandLookupTopicResponse {
 	enum LookupType {
 		Redirect = 0;
@@ -329,6 +336,8 @@ message CommandLookupTopicResponse {
 	// always connect through the service url after the
 	// lookup has been completed.
 	optional bool proxy_through_service_url = 8 [default = false];
+
+	repeated string topic                 = 9;
 }
 
 /// Create a new Producer on a topic, assigning the given producer_id,
@@ -631,6 +640,8 @@ message BaseCommand {
 
 		AUTH_CHALLENGE = 36;
 		AUTH_RESPONSE = 37;
+
+		BATCH_LOOKUP = 38;
 	}
 
 
@@ -686,5 +697,7 @@ message BaseCommand {
 
 	optional CommandAuthChallenge authChallenge = 36;
 	optional CommandAuthResponse authResponse = 37;
+
+	optional CommandBatchLookupTopic batchLookupTopic = 38;
 
 }
