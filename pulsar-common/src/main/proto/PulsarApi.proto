@@ -642,6 +642,7 @@ message BaseCommand {
 		AUTH_RESPONSE = 37;
 
 		BATCH_LOOKUP = 38;
+        BATCH_LOOKUP_RESPONSE= 39;
 	}
 
 

@@ -27244,6 +27244,7 @@ public final class PulsarApi {
       AUTH_CHALLENGE(34, 36),
       AUTH_RESPONSE(35, 37),
       BATCH_LOOKUP(36, 38),
+      BATCH_LOOKUP_RESPONSE(37, 39),
       ;
       
       public static final int CONNECT_VALUE = 2;
@@ -27283,6 +27284,7 @@ public final class PulsarApi {
       public static final int AUTH_CHALLENGE_VALUE = 36;
       public static final int AUTH_RESPONSE_VALUE = 37;
       public static final int BATCH_LOOKUP_VALUE = 38;
+      public static final int BATCH_LOOKUP_RESPONSE_VALUE = 39;
       
       
       public final int getNumber() { return value; }
@@ -27326,6 +27328,7 @@ public final class PulsarApi {
           case 36: return AUTH_CHALLENGE;
           case 37: return AUTH_RESPONSE;
           case 38: return BATCH_LOOKUP;
+          case 39: return BATCH_LOOKUP_RESPONSE;
           default: return null;
         }
       }

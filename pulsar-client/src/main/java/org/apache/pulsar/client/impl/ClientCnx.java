@@ -44,6 +44,7 @@ import org.apache.pulsar.client.api.AuthenticationDataProvider;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.PulsarClientException.TimeoutException;
 import org.apache.pulsar.client.impl.BinaryProtoLookupService.LookupDataResult;
+import org.apache.pulsar.client.impl.BinaryProtoLookupService.BatchLookupDataResult;
 import org.apache.pulsar.client.impl.conf.ClientConfigurationData;
 import org.apache.pulsar.common.api.AuthData;
 import org.apache.pulsar.common.api.Commands;
@@ -639,6 +640,14 @@ public class ClientCnx extends PulsarHandler {
                     waitingLookupRequests.size())));
             }
         }
+        return future;
+    }
+
+    public CompletableFuture<BatchLookupDataResult> newBatchLookup() {
+        CompletableFuture<BatchLookupDataResult> future = new CompletableFuture<>();
+
+
+
         return future;
     }
 

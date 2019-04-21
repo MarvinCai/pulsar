@@ -43,6 +43,7 @@ import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetSchemaResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetTopicsOfNamespace;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetTopicsOfNamespaceResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopic;
+import org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopic;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandMessage;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandPartitionedTopicMetadata;
@@ -118,6 +119,18 @@ public abstract class PulsarDecoder extends ChannelInboundHandlerAdapter {
             case LOOKUP_RESPONSE:
                 checkArgument(cmd.hasLookupTopicResponse());
                 handleLookupResponse(cmd.getLookupTopicResponse());
+                cmd.getLookupTopicResponse().recycle();
+                break;
+
+            case BATCH_LOOKUP:
+                checkArgument(cmd.hasBatchLookupTopic());
+                handleBatchLookup(cmd.getBatchLookupTopic());
+                cmd.getBatchLookupTopic().recycle();
+                break;
+
+            case BATCH_LOOKUP_RESPONSE:
+                checkArgument(cmd.hasLookupTopicResponse());
+                handleBatchLookupResponse(cmd.getLookupTopicResponse());
                 cmd.getLookupTopicResponse().recycle();
                 break;
 
@@ -346,6 +359,14 @@ public abstract class PulsarDecoder extends ChannelInboundHandlerAdapter {
     }
 
     protected void handleLookupResponse(CommandLookupTopicResponse connection) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void handleBatchLookup(CommandBatchLookupTopic lookup) {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void handleBatchLookupResponse(CommandLookupTopicResponse connection) {
         throw new UnsupportedOperationException();
     }
 

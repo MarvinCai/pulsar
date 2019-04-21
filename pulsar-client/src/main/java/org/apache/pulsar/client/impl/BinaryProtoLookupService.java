@@ -302,5 +302,15 @@ public class BinaryProtoLookupService implements LookupService {
 
     }
 
+    public static class BatchLookupDataResult {
+        public final LookupDataResult brokerInfo;
+        public final List<String> topics;
+
+        public BatchLookupDataResult(CommandLookupTopicResponse result) {
+            this.brokerInfo = new LookupDataResult(result);
+            this.topics = result.getTopicsList();
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(BinaryProtoLookupService.class);
 }
