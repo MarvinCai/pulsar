@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import javax.net.ssl.SSLSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.pulsar.PulsarVersion;
@@ -116,7 +117,6 @@ public class ClientCnx extends PulsarHandler {
     private final CompletableFuture<Void> connectionFuture = new CompletableFuture<Void>();
     private final ConcurrentLinkedQueue<RequestTime> requestTimeoutQueue = new ConcurrentLinkedQueue<>();
     private final Semaphore pendingLookupRequestSemaphore;
-    private final Semaphore pendingBatchLookupRequestSemaphore;
     private final EventLoopGroup eventLoopGroup;
 
     private static final AtomicIntegerFieldUpdater<ClientCnx> NUMBER_OF_REJECTED_REQUESTS_UPDATER = AtomicIntegerFieldUpdater
@@ -162,7 +162,6 @@ public class ClientCnx extends PulsarHandler {
         super(conf.getKeepAliveIntervalSeconds(), TimeUnit.SECONDS);
         checkArgument(conf.getMaxLookupRequest() > conf.getConcurrentLookupRequest());
         this.pendingLookupRequestSemaphore = new Semaphore(conf.getConcurrentLookupRequest(), true);
-        this.pendingBatchLookupRequestSemaphore = new Semaphore(conf.getConcurrentLookupRequest(), true);
         this.waitingLookupRequests = Queues
             .newArrayBlockingQueue((conf.getMaxLookupRequest() - conf.getConcurrentLookupRequest()));
         this.waitingBatchLookupRequests = Queues
@@ -467,12 +466,12 @@ public class ClientCnx extends PulsarHandler {
     }
 
     @Override
-    protected void handleBatchLookupResponse(CommandLookupTopicResponse batchLookupResult) {
+    protected void handleBatchLookupResponse(PulsarApi.CommandBatchLookupTopicResponse batchLookupResult) {
         if (log.isDebugEnabled()) {
-            log.debug("Received batch Broker lookup response: {}", batchLookupResult.getResponse());
+            log.debug("Received batch Broker lookup response: {}", StringUtils.join(batchLookupResult.getLookupResponsesList(), "\n"));
         }
 
-        long requestId = batchLookupResult.getRequestId();
+        long requestId = batchLookupResult.getLookupResponsesList().get(0).getRequestId();
         CompletableFuture<BatchLookupDataResult> pendingBatchLookupFuture = getAndRemovePendingBatchLookupRequest(requestId);
 
         if (null != pendingBatchLookupFuture) {
@@ -485,14 +484,8 @@ public class ClientCnx extends PulsarHandler {
 
             if (!batchLookupResult.hasResponse()
                     || CommandLookupTopicResponse.LookupType.Failed.equals(batchLookupResult.getResponse())) {
-                if (batchLookupResult.hasError()) {
-                    checkServerError(batchLookupResult.getError(), batchLookupResult.getMessage());
-                    pendingBatchLookupFuture.completeExceptionally(
-                            getPulsarClientException(batchLookupResult.getError(), batchLookupResult.getMessage()));
-                } else {
-                    pendingBatchLookupFuture
+                pendingBatchLookupFuture
                             .completeExceptionally(new PulsarClientException.LookupException("Empty lookup response"));
-                }
             } else {
                 pendingBatchLookupFuture.complete(new BatchLookupDataResult(batchLookupResult));
             }
@@ -618,7 +611,7 @@ public class ClientCnx extends PulsarHandler {
                     });
                 });
             } else {
-                pendingBatchLookupRequestSemaphore.release();
+                pendingLookupRequestSemaphore.release();
             }
         }
         return future;
@@ -728,7 +721,7 @@ public class ClientCnx extends PulsarHandler {
     public CompletableFuture<BatchLookupDataResult> newBatchLookup(ByteBuf requestPayload, long requestId) {
         CompletableFuture<BatchLookupDataResult> future = new CompletableFuture<>();
 
-        if (pendingBatchLookupRequestSemaphore.tryAcquire()) {
+        if (pendingLookupRequestSemaphore.tryAcquire()) {
             addPendingBatchLookupRequeste(requestId, future);
             ctx.writeAndFlush(requestPayload).addListener(writeFuture -> {
                if (!writeFuture.isSuccess()) {
