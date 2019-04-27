@@ -13312,6 +13312,35 @@ public final class PulsarApi {
         getLookupResponsesList();
     org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse getLookupResponses(int index);
     int getLookupResponsesCount();
+    
+    // repeated string unauthorizedTopics = 2;
+    java.util.List<String> getUnauthorizedTopicsList();
+    int getUnauthorizedTopicsCount();
+    String getUnauthorizedTopics(int index);
+    
+    // optional .pulsar.proto.CommandBatchLookupTopicResponse.ResponseType response = 3;
+    boolean hasResponse();
+    org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType getResponse();
+    
+    // optional .pulsar.proto.ServerError error = 4;
+    boolean hasError();
+    org.apache.pulsar.common.api.proto.PulsarApi.ServerError getError();
+    
+    // optional string message = 5;
+    boolean hasMessage();
+    String getMessage();
+    
+    // required uint64 request_id = 6;
+    boolean hasRequestId();
+    long getRequestId();
+    
+    // optional bool authoritative = 7 [default = false];
+    boolean hasAuthoritative();
+    boolean getAuthoritative();
+    
+    // optional bool proxy_through_service_url = 8 [default = false];
+    boolean hasProxyThroughServiceUrl();
+    boolean getProxyThroughServiceUrl();
   }
   public static final class CommandBatchLookupTopicResponse extends
       org.apache.pulsar.shaded.com.google.protobuf.v241.GeneratedMessageLite
@@ -13331,6 +13360,7 @@ public final class PulsarApi {
         public void recycle() {
             this.initFields();
             this.memoizedIsInitialized = -1;
+            this.bitField0_ = 0;
             this.memoizedSerializedSize = -1;
             if (handle != null) { RECYCLER.recycle(this, handle); }
         }
@@ -13346,6 +13376,51 @@ public final class PulsarApi {
       return defaultInstance;
     }
     
+    public enum ResponseType
+        implements org.apache.pulsar.shaded.com.google.protobuf.v241.Internal.EnumLite {
+      Success(0, 0),
+      PartialSuccess(1, 1),
+      Failed(2, 2),
+      ;
+      
+      public static final int Success_VALUE = 0;
+      public static final int PartialSuccess_VALUE = 1;
+      public static final int Failed_VALUE = 2;
+      
+      
+      public final int getNumber() { return value; }
+      
+      public static ResponseType valueOf(int value) {
+        switch (value) {
+          case 0: return Success;
+          case 1: return PartialSuccess;
+          case 2: return Failed;
+          default: return null;
+        }
+      }
+      
+      public static org.apache.pulsar.shaded.com.google.protobuf.v241.Internal.EnumLiteMap<ResponseType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static org.apache.pulsar.shaded.com.google.protobuf.v241.Internal.EnumLiteMap<ResponseType>
+          internalValueMap =
+            new org.apache.pulsar.shaded.com.google.protobuf.v241.Internal.EnumLiteMap<ResponseType>() {
+              public ResponseType findValueByNumber(int number) {
+                return ResponseType.valueOf(number);
+              }
+            };
+      
+      private final int value;
+      
+      private ResponseType(int index, int value) {
+        this.value = value;
+      }
+      
+      // @@protoc_insertion_point(enum_scope:pulsar.proto.CommandBatchLookupTopicResponse.ResponseType)
+    }
+    
+    private int bitField0_;
     // repeated .pulsar.proto.CommandLookupTopicResponse lookupResponses = 1;
     public static final int LOOKUPRESPONSES_FIELD_NUMBER = 1;
     private java.util.List<org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse> lookupResponses_;
@@ -13367,14 +13442,121 @@ public final class PulsarApi {
       return lookupResponses_.get(index);
     }
     
+    // repeated string unauthorizedTopics = 2;
+    public static final int UNAUTHORIZEDTOPICS_FIELD_NUMBER = 2;
+    private org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringList unauthorizedTopics_;
+    public java.util.List<String>
+        getUnauthorizedTopicsList() {
+      return unauthorizedTopics_;
+    }
+    public int getUnauthorizedTopicsCount() {
+      return unauthorizedTopics_.size();
+    }
+    public String getUnauthorizedTopics(int index) {
+      return unauthorizedTopics_.get(index);
+    }
+    
+    // optional .pulsar.proto.CommandBatchLookupTopicResponse.ResponseType response = 3;
+    public static final int RESPONSE_FIELD_NUMBER = 3;
+    private org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType response_;
+    public boolean hasResponse() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType getResponse() {
+      return response_;
+    }
+    
+    // optional .pulsar.proto.ServerError error = 4;
+    public static final int ERROR_FIELD_NUMBER = 4;
+    private org.apache.pulsar.common.api.proto.PulsarApi.ServerError error_;
+    public boolean hasError() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public org.apache.pulsar.common.api.proto.PulsarApi.ServerError getError() {
+      return error_;
+    }
+    
+    // optional string message = 5;
+    public static final int MESSAGE_FIELD_NUMBER = 5;
+    private java.lang.Object message_;
+    public boolean hasMessage() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public String getMessage() {
+      java.lang.Object ref = message_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString bs = 
+            (org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (org.apache.pulsar.shaded.com.google.protobuf.v241.Internal.isValidUtf8(bs)) {
+          message_ = s;
+        }
+        return s;
+      }
+    }
+    private org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString getMessageBytes() {
+      java.lang.Object ref = message_;
+      if (ref instanceof String) {
+        org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString b = 
+            org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString.copyFromUtf8((String) ref);
+        message_ = b;
+        return b;
+      } else {
+        return (org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString) ref;
+      }
+    }
+    
+    // required uint64 request_id = 6;
+    public static final int REQUEST_ID_FIELD_NUMBER = 6;
+    private long requestId_;
+    public boolean hasRequestId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public long getRequestId() {
+      return requestId_;
+    }
+    
+    // optional bool authoritative = 7 [default = false];
+    public static final int AUTHORITATIVE_FIELD_NUMBER = 7;
+    private boolean authoritative_;
+    public boolean hasAuthoritative() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    public boolean getAuthoritative() {
+      return authoritative_;
+    }
+    
+    // optional bool proxy_through_service_url = 8 [default = false];
+    public static final int PROXY_THROUGH_SERVICE_URL_FIELD_NUMBER = 8;
+    private boolean proxyThroughServiceUrl_;
+    public boolean hasProxyThroughServiceUrl() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    public boolean getProxyThroughServiceUrl() {
+      return proxyThroughServiceUrl_;
+    }
+    
     private void initFields() {
       lookupResponses_ = java.util.Collections.emptyList();
+      unauthorizedTopics_ = org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringArrayList.EMPTY;
+      response_ = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType.Success;
+      error_ = org.apache.pulsar.common.api.proto.PulsarApi.ServerError.UnknownError;
+      message_ = "";
+      requestId_ = 0L;
+      authoritative_ = false;
+      proxyThroughServiceUrl_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
       
+      if (!hasRequestId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       for (int i = 0; i < getLookupResponsesCount(); i++) {
         if (!getLookupResponses(i).isInitialized()) {
           memoizedIsInitialized = 0;
@@ -13396,6 +13578,27 @@ public final class PulsarApi {
       for (int i = 0; i < lookupResponses_.size(); i++) {
         output.writeMessage(1, lookupResponses_.get(i));
       }
+      for (int i = 0; i < unauthorizedTopics_.size(); i++) {
+        output.writeBytes(2, unauthorizedTopics_.getByteString(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(3, response_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeEnum(4, error_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(5, getMessageBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt64(6, requestId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBool(7, authoritative_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBool(8, proxyThroughServiceUrl_);
+      }
     }
     
     private int memoizedSerializedSize = -1;
@@ -13407,6 +13610,39 @@ public final class PulsarApi {
       for (int i = 0; i < lookupResponses_.size(); i++) {
         size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
           .computeMessageSize(1, lookupResponses_.get(i));
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < unauthorizedTopics_.size(); i++) {
+          dataSize += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+            .computeBytesSizeNoTag(unauthorizedTopics_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getUnauthorizedTopicsList().size();
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeEnumSize(3, response_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeEnumSize(4, error_.getNumber());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeBytesSize(5, getMessageBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeUInt64Size(6, requestId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeBoolSize(7, authoritative_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeBoolSize(8, proxyThroughServiceUrl_);
       }
       memoizedSerializedSize = size;
       return size;
@@ -13523,6 +13759,20 @@ public final class PulsarApi {
         super.clear();
         lookupResponses_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
+        unauthorizedTopics_ = org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        response_ = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType.Success;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        error_ = org.apache.pulsar.common.api.proto.PulsarApi.ServerError.UnknownError;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        message_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        requestId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        authoritative_ = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        proxyThroughServiceUrl_ = false;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
       
@@ -13555,11 +13805,43 @@ public final class PulsarApi {
       public org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse buildPartial() {
         org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse result = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.RECYCLER.get();
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           lookupResponses_ = java.util.Collections.unmodifiableList(lookupResponses_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.lookupResponses_ = lookupResponses_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          unauthorizedTopics_ = new org.apache.pulsar.shaded.com.google.protobuf.v241.UnmodifiableLazyStringList(
+              unauthorizedTopics_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.unauthorizedTopics_ = unauthorizedTopics_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.response_ = response_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.error_ = error_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.message_ = message_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.requestId_ = requestId_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.authoritative_ = authoritative_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.proxyThroughServiceUrl_ = proxyThroughServiceUrl_;
+        result.bitField0_ = to_bitField0_;
         return result;
       }
       
@@ -13575,10 +13857,42 @@ public final class PulsarApi {
           }
           
         }
+        if (!other.unauthorizedTopics_.isEmpty()) {
+          if (unauthorizedTopics_.isEmpty()) {
+            unauthorizedTopics_ = other.unauthorizedTopics_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureUnauthorizedTopicsIsMutable();
+            unauthorizedTopics_.addAll(other.unauthorizedTopics_);
+          }
+          
+        }
+        if (other.hasResponse()) {
+          setResponse(other.getResponse());
+        }
+        if (other.hasError()) {
+          setError(other.getError());
+        }
+        if (other.hasMessage()) {
+          setMessage(other.getMessage());
+        }
+        if (other.hasRequestId()) {
+          setRequestId(other.getRequestId());
+        }
+        if (other.hasAuthoritative()) {
+          setAuthoritative(other.getAuthoritative());
+        }
+        if (other.hasProxyThroughServiceUrl()) {
+          setProxyThroughServiceUrl(other.getProxyThroughServiceUrl());
+        }
         return this;
       }
       
       public final boolean isInitialized() {
+        if (!hasRequestId()) {
+          
+          return false;
+        }
         for (int i = 0; i < getLookupResponsesCount(); i++) {
           if (!getLookupResponses(i).isInitialized()) {
             
@@ -13614,6 +13928,49 @@ public final class PulsarApi {
               org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse.Builder subBuilder = org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addLookupResponses(subBuilder.buildPartial());
+              break;
+            }
+            case 18: {
+              ensureUnauthorizedTopicsIsMutable();
+              unauthorizedTopics_.add(input.readBytes());
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+              org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType value = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType.valueOf(rawValue);
+              if (value != null) {
+                bitField0_ |= 0x00000004;
+                response_ = value;
+              }
+              break;
+            }
+            case 32: {
+              int rawValue = input.readEnum();
+              org.apache.pulsar.common.api.proto.PulsarApi.ServerError value = org.apache.pulsar.common.api.proto.PulsarApi.ServerError.valueOf(rawValue);
+              if (value != null) {
+                bitField0_ |= 0x00000008;
+                error_ = value;
+              }
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              message_ = input.readBytes();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              requestId_ = input.readUInt64();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              authoritative_ = input.readBool();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000080;
+              proxyThroughServiceUrl_ = input.readBool();
               break;
             }
           }
@@ -13707,6 +14064,209 @@ public final class PulsarApi {
       public Builder removeLookupResponses(int index) {
         ensureLookupResponsesIsMutable();
         lookupResponses_.remove(index);
+        
+        return this;
+      }
+      
+      // repeated string unauthorizedTopics = 2;
+      private org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringList unauthorizedTopics_ = org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringArrayList.EMPTY;
+      private void ensureUnauthorizedTopicsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          unauthorizedTopics_ = new org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringArrayList(unauthorizedTopics_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      public java.util.List<String>
+          getUnauthorizedTopicsList() {
+        return java.util.Collections.unmodifiableList(unauthorizedTopics_);
+      }
+      public int getUnauthorizedTopicsCount() {
+        return unauthorizedTopics_.size();
+      }
+      public String getUnauthorizedTopics(int index) {
+        return unauthorizedTopics_.get(index);
+      }
+      public Builder setUnauthorizedTopics(
+          int index, String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureUnauthorizedTopicsIsMutable();
+        unauthorizedTopics_.set(index, value);
+        
+        return this;
+      }
+      public Builder addUnauthorizedTopics(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureUnauthorizedTopicsIsMutable();
+        unauthorizedTopics_.add(value);
+        
+        return this;
+      }
+      public Builder addAllUnauthorizedTopics(
+          java.lang.Iterable<String> values) {
+        ensureUnauthorizedTopicsIsMutable();
+        super.addAll(values, unauthorizedTopics_);
+        
+        return this;
+      }
+      public Builder clearUnauthorizedTopics() {
+        unauthorizedTopics_ = org.apache.pulsar.shaded.com.google.protobuf.v241.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        
+        return this;
+      }
+      void addUnauthorizedTopics(org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString value) {
+        ensureUnauthorizedTopicsIsMutable();
+        unauthorizedTopics_.add(value);
+        
+      }
+      
+      // optional .pulsar.proto.CommandBatchLookupTopicResponse.ResponseType response = 3;
+      private org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType response_ = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType.Success;
+      public boolean hasResponse() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType getResponse() {
+        return response_;
+      }
+      public Builder setResponse(org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        response_ = value;
+        
+        return this;
+      }
+      public Builder clearResponse() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        response_ = org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse.ResponseType.Success;
+        
+        return this;
+      }
+      
+      // optional .pulsar.proto.ServerError error = 4;
+      private org.apache.pulsar.common.api.proto.PulsarApi.ServerError error_ = org.apache.pulsar.common.api.proto.PulsarApi.ServerError.UnknownError;
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public org.apache.pulsar.common.api.proto.PulsarApi.ServerError getError() {
+        return error_;
+      }
+      public Builder setError(org.apache.pulsar.common.api.proto.PulsarApi.ServerError value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        error_ = value;
+        
+        return this;
+      }
+      public Builder clearError() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        error_ = org.apache.pulsar.common.api.proto.PulsarApi.ServerError.UnknownError;
+        
+        return this;
+      }
+      
+      // optional string message = 5;
+      private java.lang.Object message_ = "";
+      public boolean hasMessage() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      public String getMessage() {
+        java.lang.Object ref = message_;
+        if (!(ref instanceof String)) {
+          String s = ((org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString) ref).toStringUtf8();
+          message_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setMessage(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        message_ = value;
+        
+        return this;
+      }
+      public Builder clearMessage() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        message_ = getDefaultInstance().getMessage();
+        
+        return this;
+      }
+      void setMessage(org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString value) {
+        bitField0_ |= 0x00000010;
+        message_ = value;
+        
+      }
+      
+      // required uint64 request_id = 6;
+      private long requestId_ ;
+      public boolean hasRequestId() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      public long getRequestId() {
+        return requestId_;
+      }
+      public Builder setRequestId(long value) {
+        bitField0_ |= 0x00000020;
+        requestId_ = value;
+        
+        return this;
+      }
+      public Builder clearRequestId() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        requestId_ = 0L;
+        
+        return this;
+      }
+      
+      // optional bool authoritative = 7 [default = false];
+      private boolean authoritative_ ;
+      public boolean hasAuthoritative() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      public boolean getAuthoritative() {
+        return authoritative_;
+      }
+      public Builder setAuthoritative(boolean value) {
+        bitField0_ |= 0x00000040;
+        authoritative_ = value;
+        
+        return this;
+      }
+      public Builder clearAuthoritative() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        authoritative_ = false;
+        
+        return this;
+      }
+      
+      // optional bool proxy_through_service_url = 8 [default = false];
+      private boolean proxyThroughServiceUrl_ ;
+      public boolean hasProxyThroughServiceUrl() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      public boolean getProxyThroughServiceUrl() {
+        return proxyThroughServiceUrl_;
+      }
+      public Builder setProxyThroughServiceUrl(boolean value) {
+        bitField0_ |= 0x00000080;
+        proxyThroughServiceUrl_ = value;
+        
+        return this;
+      }
+      public Builder clearProxyThroughServiceUrl() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        proxyThroughServiceUrl_ = false;
         
         return this;
       }

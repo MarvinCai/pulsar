@@ -50,7 +50,6 @@ import org.apache.pulsar.client.impl.conf.ClientConfigurationData;
 import org.apache.pulsar.common.api.AuthData;
 import org.apache.pulsar.common.api.Commands;
 import org.apache.pulsar.common.api.PulsarHandler;
-import org.apache.pulsar.common.api.proto.PulsarApi;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandActiveConsumerChange;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandAuthChallenge;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandCloseConsumer;
@@ -61,6 +60,7 @@ import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetLastMessageIdRespo
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetSchemaResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandGetTopicsOfNamespaceResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandLookupTopicResponse;
+import org.apache.pulsar.common.api.proto.PulsarApi.CommandBatchLookupTopicResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandMessage;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandPartitionedTopicMetadataResponse;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandProducerSuccess;
@@ -466,12 +466,12 @@ public class ClientCnx extends PulsarHandler {
     }
 
     @Override
-    protected void handleBatchLookupResponse(PulsarApi.CommandBatchLookupTopicResponse batchLookupResult) {
+    protected void handleBatchLookupResponse(CommandBatchLookupTopicResponse batchLookupResult) {
         if (log.isDebugEnabled()) {
             log.debug("Received batch Broker lookup response: {}", StringUtils.join(batchLookupResult.getLookupResponsesList(), "\n"));
         }
 
-        long requestId = batchLookupResult.getLookupResponsesList().get(0).getRequestId();
+        long requestId = batchLookupResult.getRequestId();
         CompletableFuture<BatchLookupDataResult> pendingBatchLookupFuture = getAndRemovePendingBatchLookupRequest(requestId);
 
         if (null != pendingBatchLookupFuture) {
@@ -483,9 +483,15 @@ public class ClientCnx extends PulsarHandler {
             }
 
             if (!batchLookupResult.hasResponse()
-                    || CommandLookupTopicResponse.LookupType.Failed.equals(batchLookupResult.getResponse())) {
-                pendingBatchLookupFuture
+                    || CommandBatchLookupTopicResponse.ResponseType.Failed.equals(batchLookupResult.getResponse())) {
+                if (batchLookupResult.hasError()) {
+                    checkServerError(batchLookupResult.getError(), batchLookupResult.getMessage());
+                    pendingBatchLookupFuture.completeExceptionally(
+                            getPulsarClientException(batchLookupResult.getError(), batchLookupResult.getMessage()));
+                } else {
+                    pendingBatchLookupFuture
                             .completeExceptionally(new PulsarClientException.LookupException("Empty lookup response"));
+                }
             } else {
                 pendingBatchLookupFuture.complete(new BatchLookupDataResult(batchLookupResult));
             }
@@ -553,7 +559,7 @@ public class ClientCnx extends PulsarHandler {
         }, operationTimeoutMs, TimeUnit.MILLISECONDS);
     }
 
-    private void addPendingBatchLookupRequeste(long requestId, CompletableFuture<BatchLookupDataResult> future) {
+    private void addPendingBatchLookupRequests(long requestId, CompletableFuture<BatchLookupDataResult> future) {
         pendingBatchLookupRequests.put(requestId, future);
         eventLoopGroup.schedule(() -> {
             if (!future.isDone()) {
@@ -722,7 +728,7 @@ public class ClientCnx extends PulsarHandler {
         CompletableFuture<BatchLookupDataResult> future = new CompletableFuture<>();
 
         if (pendingLookupRequestSemaphore.tryAcquire()) {
-            addPendingBatchLookupRequeste(requestId, future);
+            addPendingBatchLookupRequests(requestId, future);
             ctx.writeAndFlush(requestPayload).addListener(writeFuture -> {
                if (!writeFuture.isSuccess()) {
                    log.warn("{} Failed to send batch lookup request with id: {} to broker: {}", ctx.channel(),
