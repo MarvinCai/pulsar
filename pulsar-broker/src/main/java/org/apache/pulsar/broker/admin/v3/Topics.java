@@ -24,16 +24,11 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.pulsar.broker.admin.impl.TopicsBase;
+import org.apache.pulsar.common.policies.data.ConsumeMessageRequest;
+import org.apache.pulsar.common.policies.data.CreateConsumerRequest;
 import org.apache.pulsar.common.policies.data.ProduceMessageRequest;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
@@ -84,6 +79,51 @@ public class Topics extends TopicsBase {
                                         ProduceMessageRequest produceMessageRequest) {
         validateTopicName(tenant, namespace, encodedTopic);
         publishMessagesToPartition(asyncResponse, produceMessageRequest, authoritative, partition);
+    }
+
+    @POST
+    @Path("/{tenant}/{namespace}/{topic}/subscription/{subscription}")
+    @ApiOperation(value = "Create a consumer on a topic for subscription.", response = String.class, responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "tenant/namespace/topic doesn't exit"),
+            @ApiResponse(code = 412, message = "Namespace name is not valid"),
+            @ApiResponse(code = 500, message = "Internal server error") })
+    public void createConsumer(@Suspended final AsyncResponse asyncResponse,
+                               @ApiParam(value = "Specify the tenant", required = true)
+                               @PathParam("tenant") String tenant,
+                               @ApiParam(value = "Specify the namespace", required = true)
+                               @PathParam("namespace") String namespace,
+                               @ApiParam(value = "Specify topic name", required = true)
+                               @PathParam("topic") @Encoded String encodedTopic,
+                               @ApiParam(value = "Specify subscription name", required = true)
+                               @PathParam("subscription") String subscription,
+                               @QueryParam("authoritative") @DefaultValue("false") boolean authoritative,
+                               CreateConsumerRequest createConsumerRequest) {
+        validateTopicName(tenant, namespace, encodedTopic);
+        createConsumer(asyncResponse, createConsumerRequest, authoritative, subscription);
+    }
+
+    @GET
+    @Path("/{tenant}/{namespace}/{topic}/subscription/{subscription}/consumer/{consumerId}/messages")
+    @ApiOperation(value = "Consume messages on topic.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "tenant/namespace/topic doesn't exit"),
+            @ApiResponse(code = 412, message = "Namespace name is not valid"),
+            @ApiResponse(code = 500, message = "Internal server error") })
+    public void consumeMessage(@Suspended final AsyncResponse asyncResponse,
+                               @ApiParam(value = "Specify the tenant", required = true)
+                               @PathParam("tenant") String tenant,
+                               @ApiParam(value = "Specify the namespace", required = true)
+                               @PathParam("namespace") String namespace,
+                               @ApiParam(value = "Specify topic name", required = true)
+                               @PathParam("topic") @Encoded String encodedTopic,
+                               @ApiParam(value = "Specify subscription name", required = true)
+                               @PathParam("subscription") String subscription,
+                               @ApiParam(value = "Specify subscription name", required = true)
+                               @PathParam("consumerId") String consumerId,
+                               ConsumeMessageRequest consumeMessageRequest) {
+        validateTopicName(tenant, namespace, encodedTopic);
+        consumeMessages(asyncResponse, consumeMessageRequest, subscription, consumerId);
     }
 
 }

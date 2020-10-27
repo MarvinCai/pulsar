@@ -1,7 +1,5 @@
 package org.apache.pulsar.common.policies.data;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -17,19 +15,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class CreateConsumerResponse {
-    List<CreateConsumerResponse.CreateConsumerResult> results;
+    String consumerId;
 
     String url;
-
-    /**
-     *
-     */
-    @Setter
-    @Getter
-    @AllArgsConstructor
-    public static class CreateConsumerResult {
-        String consumerId;
-
-        int partitionNumber;
-    }
 }
