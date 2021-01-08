@@ -40,33 +40,33 @@ function broker_group_1() {
 }
 
 function broker_group_2() {
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentDispatcherFailoverConsumerStreamingDispatcherTest.java" \
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/*StreamingDispatcher*Test.java" \
                                       -DtestForkCount=1 \
                                       -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentTopicStreamingDispatcherTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/SimpleProducerConsumerTestStreamingDispatcherTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentSubscriptionMessageDispatchStreamingDispatcherThrottlingTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentStreamingDispatcherBlockConsumerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentFailoverStreamingDispatcherE2ETest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentTopicStreamingDispatcherE2ETest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentTopicStreamingDispatcherTest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/SimpleProducerConsumerTestStreamingDispatcherTest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentSubscriptionMessageDispatchStreamingDispatcherThrottlingTest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentStreamingDispatcherBlockConsumerTest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentFailoverStreamingDispatcherE2ETest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
+#
+#  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/PersistentTopicStreamingDispatcherE2ETest.java" \
+#                                      -DtestForkCount=1 \
+#                                      -DtestReuseFork=true
 }
 
 function broker_client_api() {
