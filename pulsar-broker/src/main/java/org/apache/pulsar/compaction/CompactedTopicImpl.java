@@ -21,30 +21,30 @@ package org.apache.pulsar.compaction;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ComparisonChain;
-
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import org.apache.bookkeeper.client.BookKeeper;
+import java.util.concurrent.ExecutionException;
+import lombok.Getter;
 import org.apache.bookkeeper.client.BKException;
-import org.apache.bookkeeper.client.LedgerHandle;
+import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerEntry;
+import org.apache.bookkeeper.client.LedgerHandle;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.Entry;
 import org.apache.bookkeeper.mledger.ManagedCursor;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.Position;
-import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.impl.EntryImpl;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
 import org.apache.pulsar.client.api.RawMessage;
 import org.apache.pulsar.client.impl.RawMessageImpl;
 import org.apache.pulsar.common.api.proto.PulsarApi.MessageIdData;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class CompactedTopicImpl implements CompactedTopic {
     @Override
     public CompletableFuture<?> newCompactedLedger(Position p, long compactedLedgerId) {
         synchronized (this) {
-            compactionHorizon = (PositionImpl)p;
+            compactionHorizon = (PositionImpl) p;
 
             CompletableFuture<CompactedTopicContext> previousContext = compactedTopicContext;
             compactedTopicContext = openCompactedLedger(bk, compactedLedgerId);
@@ -124,7 +124,7 @@ public class CompactedTopicImpl implements CompactedTopic {
 
     static CompletableFuture<Long> findStartPoint(PositionImpl p,
                                                   long lastEntryId,
-                                                  AsyncLoadingCache<Long,MessageIdData> cache) {
+                                                  AsyncLoadingCache<Long, MessageIdData> cache) {
         CompletableFuture<Long> promise = new CompletableFuture<>();
         findStartPointLoop(p, 0, lastEntryId, promise, cache);
         return promise;
@@ -132,7 +132,7 @@ public class CompactedTopicImpl implements CompactedTopic {
 
     private static void findStartPointLoop(PositionImpl p, long start, long end,
                                            CompletableFuture<Long> promise,
-                                           AsyncLoadingCache<Long,MessageIdData> cache) {
+                                           AsyncLoadingCache<Long, MessageIdData> cache) {
         long midpoint = start + ((end - start) / 2);
 
         CompletableFuture<MessageIdData> startEntry = cache.get(start);
@@ -156,11 +156,11 @@ public class CompactedTopicImpl implements CompactedTopic {
                     });
     }
 
-    static AsyncLoadingCache<Long,MessageIdData> createCache(LedgerHandle lh,
-                                                             long maxSize) {
+    static AsyncLoadingCache<Long, MessageIdData> createCache(LedgerHandle lh,
+                                                              long maxSize) {
         return Caffeine.newBuilder()
-            .maximumSize(maxSize)
-            .buildAsync((entryId, executor) -> readOneMessageId(lh, entryId));
+                .maximumSize(maxSize)
+                .buildAsync((entryId, executor) -> readOneMessageId(lh, entryId));
     }
 
 
@@ -250,14 +250,23 @@ public class CompactedTopicImpl implements CompactedTopic {
                 });
     }
 
-    static class CompactedTopicContext {
+    @Getter
+    public static class CompactedTopicContext {
         final LedgerHandle ledger;
-        final AsyncLoadingCache<Long,MessageIdData> cache;
+        final AsyncLoadingCache<Long, MessageIdData> cache;
 
-        CompactedTopicContext(LedgerHandle ledger, AsyncLoadingCache<Long,MessageIdData> cache) {
+        CompactedTopicContext(LedgerHandle ledger, AsyncLoadingCache<Long, MessageIdData> cache) {
             this.ledger = ledger;
             this.cache = cache;
         }
+    }
+
+    /**
+     * Getter for CompactedTopicContext.
+     * @return CompactedTopicContext
+     */
+    public Optional<CompactedTopicContext> getCompactedTopicContext() throws ExecutionException, InterruptedException {
+        return compactedTopicContext == null ? Optional.empty() : Optional.of(compactedTopicContext.get());
     }
 
     private static int comparePositionAndMessageId(PositionImpl p, MessageIdData m) {

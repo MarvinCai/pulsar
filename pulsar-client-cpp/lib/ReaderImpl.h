@@ -29,7 +29,15 @@ class ReaderImpl;
 typedef std::shared_ptr<ReaderImpl> ReaderImplPtr;
 typedef std::weak_ptr<ReaderImpl> ReaderImplWeakPtr;
 
-class ReaderImpl : public std::enable_shared_from_this<ReaderImpl> {
+namespace test {
+
+extern std::mutex readerConfigTestMutex PULSAR_PUBLIC;
+extern std::atomic_bool readerConfigTestEnabled PULSAR_PUBLIC;
+extern ConsumerConfiguration consumerConfigOfReader PULSAR_PUBLIC;
+
+}  // namespace test
+
+class PULSAR_PUBLIC ReaderImpl : public std::enable_shared_from_this<ReaderImpl> {
    public:
     ReaderImpl(const ClientImplPtr client, const std::string& topic, const ReaderConfiguration& conf,
                const ExecutorServicePtr listenerExecutor, ReaderCallback readerCreatedCallback);
@@ -52,6 +60,8 @@ class ReaderImpl : public std::enable_shared_from_this<ReaderImpl> {
     void seekAsync(const MessageId& msgId, ResultCallback callback);
     void seekAsync(uint64_t timestamp, ResultCallback callback);
 
+    ReaderImplWeakPtr getReaderImplWeakPtr();
+
    private:
     void handleConsumerCreated(Result result, ConsumerImplBaseWeakPtr consumer);
 
@@ -65,6 +75,7 @@ class ReaderImpl : public std::enable_shared_from_this<ReaderImpl> {
     ConsumerImplPtr consumer_;
     ReaderCallback readerCreatedCallback_;
     ReaderListener readerListener_;
+    ReaderImplWeakPtr readerImplWeakPtr_;
 };
 }  // namespace pulsar
 

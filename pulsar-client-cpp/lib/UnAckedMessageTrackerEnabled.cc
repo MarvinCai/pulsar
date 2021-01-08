@@ -39,7 +39,7 @@ void UnAckedMessageTrackerEnabled::timeoutHandler() {
 }
 
 void UnAckedMessageTrackerEnabled::timeoutHandlerHelper() {
-    std::lock_guard<std::mutex> acquire(lock_);
+    std::unique_lock<std::mutex> acquire(lock_);
     LOG_DEBUG("UnAckedMessageTrackerEnabled::timeoutHandlerHelper invoked for consumerPtr_ "
               << consumerReference_.getName().c_str());
 
@@ -60,6 +60,9 @@ void UnAckedMessageTrackerEnabled::timeoutHandlerHelper() {
     timePartitions.push_back(headPartition);
 
     if (msgIdsToRedeliver.size() > 0) {
+        // redeliverUnacknowledgedMessages() may call clear() that acquire the lock again, so we should unlock
+        // here to avoid deadlock
+        acquire.unlock();
         consumerReference_.redeliverUnacknowledgedMessages(msgIdsToRedeliver);
     }
 }
@@ -110,6 +113,7 @@ bool UnAckedMessageTrackerEnabled::remove(const MessageId& m) {
     std::map<MessageId, std::set<MessageId>&>::iterator exist = messageIdPartitionMap.find(m);
     if (exist != messageIdPartitionMap.end()) {
         removed = exist->second.erase(m);
+        messageIdPartitionMap.erase(exist);
     }
     return removed;
 }
@@ -121,13 +125,13 @@ long UnAckedMessageTrackerEnabled::size() {
 
 void UnAckedMessageTrackerEnabled::removeMessagesTill(const MessageId& msgId) {
     std::lock_guard<std::mutex> acquire(lock_);
-    for (auto it = messageIdPartitionMap.begin(); it != messageIdPartitionMap.end(); it++) {
+    for (auto it = messageIdPartitionMap.begin(); it != messageIdPartitionMap.end();) {
         MessageId msgIdInMap = it->first;
-        if (msgIdInMap < msgId) {
-            std::map<MessageId, std::set<MessageId>&>::iterator exist = messageIdPartitionMap.find(msgId);
-            if (exist != messageIdPartitionMap.end()) {
-                exist->second.erase(msgId);
-            }
+        if (msgIdInMap <= msgId) {
+            it->second.erase(msgIdInMap);
+            messageIdPartitionMap.erase(it++);
+        } else {
+            it++;
         }
     }
 }
@@ -135,19 +139,19 @@ void UnAckedMessageTrackerEnabled::removeMessagesTill(const MessageId& msgId) {
 // this is only for MultiTopicsConsumerImpl, when un-subscribe a single topic, should remove all it's message.
 void UnAckedMessageTrackerEnabled::removeTopicMessage(const std::string& topic) {
     std::lock_guard<std::mutex> acquire(lock_);
-    for (auto it = messageIdPartitionMap.begin(); it != messageIdPartitionMap.end(); it++) {
+    for (auto it = messageIdPartitionMap.begin(); it != messageIdPartitionMap.end();) {
         MessageId msgIdInMap = it->first;
         if (msgIdInMap.getTopicName().compare(topic) == 0) {
-            std::map<MessageId, std::set<MessageId>&>::iterator exist =
-                messageIdPartitionMap.find(msgIdInMap);
-            if (exist != messageIdPartitionMap.end()) {
-                exist->second.erase(msgIdInMap);
-            }
+            it->second.erase(msgIdInMap);
+            messageIdPartitionMap.erase(it++);
+        } else {
+            it++;
         }
     }
 }
 
 void UnAckedMessageTrackerEnabled::clear() {
+    std::lock_guard<std::mutex> acquire(lock_);
     messageIdPartitionMap.clear();
     for (auto it = timePartitions.begin(); it != timePartitions.end(); it++) {
         it->clear();

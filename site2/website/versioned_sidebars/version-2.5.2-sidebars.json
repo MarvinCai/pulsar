@@ -31,7 +31,8 @@
       "version-2.5.2-functions-develop",
       "version-2.5.2-functions-debug",
       "version-2.5.2-functions-deploy",
-      "version-2.5.2-functions-cli"
+      "version-2.5.2-functions-cli",
+      "version-2.5.2-window-functions-context"
     ],
     "Pulsar IO": [
       "version-2.5.2-io-overview",
@@ -105,7 +106,6 @@
       "version-2.5.2-admin-api-non-persistent-topics",
       "version-2.5.2-admin-api-partitioned-topics",
       "version-2.5.2-admin-api-non-partitioned-topics",
-      "version-2.5.2-admin-api-schemas",
       "version-2.5.2-admin-api-functions"
     ],
     "Adaptors": [
@@ -134,6 +134,7 @@
     "Reference": [
       "version-2.5.2-reference-terminology",
       "version-2.5.2-reference-cli-tools",
+      "version-2.5.2-pulsar-admin",
       "version-2.5.2-reference-configuration",
       "version-2.5.2-reference-metrics"
     ]

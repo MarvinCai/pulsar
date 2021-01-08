@@ -22,12 +22,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.Recycler;
 import io.netty.util.Recycler.Handle;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import org.apache.pulsar.common.api.proto.PulsarApi;
 import org.apache.pulsar.common.api.proto.PulsarApi.KeyValue;
 import org.apache.pulsar.common.api.proto.PulsarApi.MessageMetadata;
@@ -156,7 +156,7 @@ public class RawMessageImpl implements RawMessage {
             if (hasBase64EncodedKey()) {
                 return Optional.of(Unpooled.wrappedBuffer(Base64.getDecoder().decode(getKey().get())));
             } else {
-                return Optional.of(Unpooled.wrappedBuffer(getKey().get().getBytes()));
+                return Optional.of(Unpooled.wrappedBuffer(getKey().get().getBytes(StandardCharsets.UTF_8)));
             }
         }
         return Optional.empty();

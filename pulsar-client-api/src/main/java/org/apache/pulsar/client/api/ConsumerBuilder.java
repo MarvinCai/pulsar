@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import org.apache.pulsar.common.classification.InterfaceAudience;
+import org.apache.pulsar.common.classification.InterfaceStability;
 
 /**
  * {@link ConsumerBuilder} is used to configure and create instances of {@link Consumer}.
@@ -31,6 +33,8 @@ import java.util.regex.Pattern;
  *
  * @since 2.0.0
  */
+@InterfaceAudience.Public
+@InterfaceStability.Stable
 public interface ConsumerBuilder<T> extends Cloneable {
 
     /**
@@ -471,8 +475,6 @@ public interface ConsumerBuilder<T> extends Cloneable {
      *            the property key
      * @param value
      *            the property value
-     * @param key
-     * @param value
      * @return the consumer builder instance
      */
     ConsumerBuilder<T> property(String key, String value);
@@ -551,6 +553,18 @@ public interface ConsumerBuilder<T> extends Cloneable {
      *            whether to auto update partition increasement
      */
     ConsumerBuilder<T> autoUpdatePartitions(boolean autoUpdate);
+
+    /**
+     * Set the interval of updating partitions <i>(default: 1 minute)</i>. This only works if autoUpdatePartitions is
+     * enabled.
+     *
+     * @param interval
+     *            the interval of updating partitions
+     * @param unit
+     *            the time unit of the interval.
+     * @return the consumer builder instance
+     */
+    ConsumerBuilder<T> autoUpdatePartitionsInterval(int interval, TimeUnit unit);
 
     /**
      * Set KeyShared subscription policy for consumer.

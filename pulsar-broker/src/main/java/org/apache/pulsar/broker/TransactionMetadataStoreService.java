@@ -19,8 +19,21 @@
 package org.apache.pulsar.broker;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import org.apache.pulsar.broker.namespace.NamespaceBundleOwnershipListener;
+import org.apache.pulsar.broker.transaction.buffer.exceptions.UnsupportedTxnActionException;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.transaction.TransactionBufferClient;
 import org.apache.pulsar.client.api.transaction.TxnID;
+import org.apache.pulsar.client.impl.MessageIdImpl;
+import org.apache.pulsar.common.api.proto.PulsarApi.MessageIdData;
+import org.apache.pulsar.common.api.proto.PulsarApi.TxnAction;
 import org.apache.pulsar.common.naming.NamespaceBundle;
 import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.TopicName;
@@ -28,17 +41,13 @@ import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.transaction.coordinator.TransactionCoordinatorID;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStore;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreProvider;
+import org.apache.pulsar.transaction.coordinator.TransactionSubscription;
 import org.apache.pulsar.transaction.coordinator.TxnMeta;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.CoordinatorNotFoundException;
-import org.apache.pulsar.transaction.impl.common.TxnStatus;
+import org.apache.pulsar.transaction.coordinator.impl.MLTransactionLogImpl;
+import org.apache.pulsar.transaction.coordinator.proto.PulsarTransactionMetadata.TxnStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionMetadataStoreService {
 
@@ -47,12 +56,14 @@ public class TransactionMetadataStoreService {
     private final Map<TransactionCoordinatorID, TransactionMetadataStore> stores;
     private final TransactionMetadataStoreProvider transactionMetadataStoreProvider;
     private final PulsarService pulsarService;
+    private final TransactionBufferClient tbClient;
 
     public TransactionMetadataStoreService(TransactionMetadataStoreProvider transactionMetadataStoreProvider,
-                                           PulsarService pulsarService) {
+                                           PulsarService pulsarService, TransactionBufferClient tbClient) {
         this.pulsarService = pulsarService;
         this.stores = new ConcurrentHashMap<>();
         this.transactionMetadataStoreProvider = transactionMetadataStoreProvider;
+        this.tbClient = tbClient;
     }
 
     public void start() {
@@ -71,7 +82,8 @@ public class TransactionMetadataStoreService {
                                 }
                             }
                         } else {
-                            LOG.error("Failed to get owned topic list when triggering on-loading bundle {}.", bundle, ex);
+                            LOG.error("Failed to get owned topic list when triggering on-loading bundle {}.",
+                                    bundle, ex);
                         }
                     });
             }
@@ -85,11 +97,13 @@ public class TransactionMetadataStoreService {
                                 if (TopicName.TRANSACTION_COORDINATOR_ASSIGN.getLocalName()
                                         .equals(TopicName.get(name.getPartitionedTopicName()).getLocalName())
                                         && name.isPartitioned()) {
-                                    removeTransactionMetadataStore(TransactionCoordinatorID.get(name.getPartitionIndex()));
+                                    removeTransactionMetadataStore(
+                                            TransactionCoordinatorID.get(name.getPartitionIndex()));
                                 }
                             }
                         } else {
-                            LOG.error("Failed to get owned topic list error when triggering un-loading bundle {}.", bundle, ex);
+                            LOG.error("Failed to get owned topic list error when triggering un-loading bundle {}.",
+                                    bundle, ex);
                         }
                      });
             }
@@ -101,15 +115,23 @@ public class TransactionMetadataStoreService {
     }
 
     public void addTransactionMetadataStore(TransactionCoordinatorID tcId) {
-        transactionMetadataStoreProvider.openStore(tcId, pulsarService.getManagedLedgerFactory())
-            .whenComplete((store, ex) -> {
-                if (ex != null) {
-                    LOG.error("Add transaction metadata store with id {} error", tcId.getId(), ex);
-                } else {
-                    stores.put(tcId, store);
-                    LOG.info("Added new transaction meta store {}", tcId);
-                }
-            });
+        pulsarService.getBrokerService()
+                .getManagedLedgerConfig(TopicName.get(MLTransactionLogImpl.TRANSACTION_LOG_PREFIX + tcId))
+                .whenComplete((v, e) -> {
+                    if (e != null) {
+                        LOG.error("Add transaction metadata store with id {} error", tcId.getId(), e);
+                    } else {
+                        transactionMetadataStoreProvider.openStore(tcId, pulsarService.getManagedLedgerFactory(), v)
+                                .whenComplete((store, ex) -> {
+                                    if (ex != null) {
+                                        LOG.error("Add transaction metadata store with id {} error", tcId.getId(), ex);
+                                    } else {
+                                        stores.put(tcId, store);
+                                        LOG.info("Added new transaction meta store {}", tcId);
+                                    }
+                                });
+                    }
+        });
     }
 
     public void removeTransactionMetadataStore(TransactionCoordinatorID tcId) {
@@ -125,12 +147,12 @@ public class TransactionMetadataStoreService {
         }
     }
 
-    public CompletableFuture<TxnID> newTransaction(TransactionCoordinatorID tcId) {
+    public CompletableFuture<TxnID> newTransaction(TransactionCoordinatorID tcId, long timeoutInMills) {
         TransactionMetadataStore store = stores.get(tcId);
         if (store == null) {
             return FutureUtil.failedFuture(new CoordinatorNotFoundException(tcId));
         }
-        return store.newTransaction();
+        return store.newTransaction(timeoutInMills);
     }
 
     public CompletableFuture<Void> addProducedPartitionToTxn(TxnID txnId, List<String> partitions) {
@@ -142,7 +164,7 @@ public class TransactionMetadataStoreService {
         return store.addProducedPartitionToTxn(txnId, partitions);
     }
 
-    public CompletableFuture<Void> addAckedPartitionToTxn(TxnID txnId, List<String> partitions) {
+    public CompletableFuture<Void> addAckedPartitionToTxn(TxnID txnId, List<TransactionSubscription> partitions) {
         TransactionCoordinatorID tcId = getTcIdFromTxnId(txnId);
         TransactionMetadataStore store = stores.get(tcId);
         if (store == null) {
@@ -167,6 +189,102 @@ public class TransactionMetadataStoreService {
             return FutureUtil.failedFuture(new CoordinatorNotFoundException(tcId));
         }
         return store.updateTxnStatus(txnId, newStatus, expectedStatus);
+    }
+
+    public CompletableFuture<Void> endTransaction(TxnID txnID, int txnAction, List<MessageIdData> messageIdDataList) {
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        TxnStatus newStatus;
+        switch (txnAction) {
+            case TxnAction.COMMIT_VALUE:
+                newStatus = TxnStatus.COMMITTING;
+                break;
+            case TxnAction.ABORT_VALUE:
+                newStatus = TxnStatus.ABORTING;
+                break;
+            default:
+                UnsupportedTxnActionException exception =
+                        new UnsupportedTxnActionException(txnID, txnAction);
+                LOG.error(exception.getMessage());
+                completableFuture.completeExceptionally(exception);
+                return completableFuture;
+        }
+
+        completableFuture = updateTxnStatus(txnID, newStatus, TxnStatus.OPEN)
+                .thenCompose(ignored -> endTxnInTransactionBuffer(txnID, txnAction, messageIdDataList));
+        if (TxnStatus.COMMITTING.equals(newStatus)) {
+            completableFuture = completableFuture
+                    .thenCompose(ignored -> updateTxnStatus(txnID, TxnStatus.COMMITTED, TxnStatus.COMMITTING));
+        } else if (TxnStatus.ABORTING.equals(newStatus)) {
+            completableFuture = completableFuture
+                    .thenCompose(ignored -> updateTxnStatus(txnID, TxnStatus.ABORTED, TxnStatus.ABORTING));
+        }
+        return completableFuture;
+    }
+
+    private CompletableFuture<Void> endTxnInTransactionBuffer(TxnID txnID, int txnAction,
+                                                              List<MessageIdData> messageIdDataList) {
+        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+        List<CompletableFuture<TxnID>> completableFutureList = new ArrayList<>();
+        this.getTxnMeta(txnID).whenComplete((txnMeta, throwable) -> {
+            if (throwable != null) {
+                resultFuture.completeExceptionally(throwable);
+                return;
+            }
+
+            txnMeta.ackedPartitions().forEach(tbSub -> {
+                CompletableFuture<TxnID> actionFuture = new CompletableFuture<>();
+                if (TxnAction.COMMIT_VALUE == txnAction) {
+                    actionFuture = tbClient.commitTxnOnSubscription(
+                            tbSub.getTopic(), tbSub.getSubscription(), txnID.getMostSigBits(), txnID.getLeastSigBits());
+                } else if (TxnAction.ABORT_VALUE == txnAction) {
+                    actionFuture = tbClient.abortTxnOnSubscription(
+                            tbSub.getTopic(), tbSub.getSubscription(), txnID.getMostSigBits(), txnID.getLeastSigBits());
+                } else {
+                    actionFuture.completeExceptionally(new Throwable("Unsupported txnAction " + txnAction));
+                }
+                completableFutureList.add(actionFuture);
+            });
+
+            List<MessageId> messageIdList = new ArrayList<>();
+            for (MessageIdData messageIdData : messageIdDataList) {
+                messageIdList.add(new MessageIdImpl(
+                        messageIdData.getLedgerId(), messageIdData.getEntryId(), messageIdData.getPartition()));
+                messageIdData.recycle();
+            }
+
+            txnMeta.producedPartitions().forEach(partition -> {
+                CompletableFuture<TxnID> actionFuture = new CompletableFuture<>();
+                if (TxnAction.COMMIT_VALUE == txnAction) {
+                    actionFuture = tbClient.commitTxnOnTopic(partition, txnID.getMostSigBits(), txnID.getLeastSigBits(),
+                            messageIdList.stream().filter(
+                                    msg -> ((MessageIdImpl) msg).getPartitionIndex()
+                                            == TopicName.get(partition).getPartitionIndex()).collect(
+                                    Collectors.toList()));
+                } else if (TxnAction.ABORT_VALUE == txnAction) {
+                    actionFuture = tbClient.abortTxnOnTopic(partition, txnID.getMostSigBits(), txnID.getLeastSigBits(),
+                            messageIdList.stream().filter(
+                                    msg -> ((MessageIdImpl) msg).getPartitionIndex()
+                                            == TopicName.get(partition).getPartitionIndex()).collect(
+                                    Collectors.toList()));
+                } else {
+                    actionFuture.completeExceptionally(new Throwable("Unsupported txnAction " + txnAction));
+                }
+                completableFutureList.add(actionFuture);
+            });
+
+            try {
+                FutureUtil.waitForAll(completableFutureList).whenComplete((ignored, waitThrowable) -> {
+                    if (waitThrowable != null) {
+                        resultFuture.completeExceptionally(waitThrowable);
+                        return;
+                    }
+                    resultFuture.complete(null);
+                });
+            } catch (Exception e) {
+                resultFuture.completeExceptionally(e);
+            }
+        });
+        return resultFuture;
     }
 
     private TransactionCoordinatorID getTcIdFromTxnId(TxnID txnId) {

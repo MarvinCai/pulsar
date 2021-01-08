@@ -18,6 +18,11 @@ module.exports = {
       roles: 'Committer, PMC',
     },
     {
+      name: 'Daniel Blankensteiner',
+      apacheId: 'blankensteiner',
+      roles: 'Committer'
+    },
+    {
       name: 'David Fisher',
       apacheId: 'wave',
       roles: 'Committer, PMC'
@@ -38,10 +43,22 @@ module.exports = {
       roles: 'Committer'
     },
     {
+      name: 'Hang Chen',
+      apacheId: 'chenhang',
+      org: 'BIGO Technology',
+      roles: 'Committer'
+    },
+    {
       name: 'Hiroyuki Sakai',
       apacheId: 'hrsakai',
       org: 'Yahoo Japan Corporation',
       roles: 'Committer, PMC'
+    },
+    {
+      name: 'Huanli Meng',
+      apacheId: 'huanlimeng',
+      org: 'StreamNative',
+      roles: 'Committer'
     },
     {
       name: 'Ivan Brendan Kelly',
@@ -59,7 +76,7 @@ module.exports = {
       name: 'Jennifer Huang',
       apacheId: 'hjf',
       org: 'StreamNative',
-      roles: 'Committer'
+      roles: 'Committer, PMC'
     },
     {
       name: 'Jia Zhai',
@@ -77,6 +94,12 @@ module.exports = {
       apacheId: 'joef',
       org: 'Yahoo',
       roles: 'Committer, PMC'
+    },
+    {
+      name: 'Lin Lin',
+      apacheId: 'linlin',
+      org: 'Tencent',
+      roles: 'Committer'
     },
     {
       name: 'Ludwig Pummer',
@@ -160,6 +183,12 @@ module.exports = {
       org: 'StreamNative',
       roles: 'Committer'
     },
+    {
+      name: 'Yijie Shen',
+      apacheId: 'yjshen',
+      org: 'KUAISHOU',
+      roles: 'Committer'
+  },
     {
         name: 'Yu Liu',
         apacheId: 'liuyu',

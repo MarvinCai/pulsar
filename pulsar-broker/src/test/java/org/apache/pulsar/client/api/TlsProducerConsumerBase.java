@@ -53,7 +53,7 @@ public class TlsProducerConsumerBase extends ProducerConsumerBase {
         super.init();
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     @Override
     protected void cleanup() throws Exception {
         super.internalCleanup();
@@ -70,6 +70,7 @@ public class TlsProducerConsumerBase extends ProducerConsumerBase {
         Set<String> tlsProtocols = Sets.newConcurrentHashSet();
         tlsProtocols.add("TLSv1.2");
         conf.setTlsProtocols(tlsProtocols);
+        conf.setNumExecutorThreadPoolSize(5);
     }
 
     protected void internalSetUpForClient(boolean addCertificates, String lookupUrl) throws Exception {

@@ -18,9 +18,11 @@
  */
 package org.apache.bookkeeper.mledger;
 
-import com.google.common.annotations.Beta;
+import org.apache.bookkeeper.common.annotation.InterfaceAudience;
+import org.apache.bookkeeper.common.annotation.InterfaceStability;
 
-@Beta
+@InterfaceAudience.LimitedPrivate
+@InterfaceStability.Stable
 @SuppressWarnings({"serial", "checkstyle:javadoctype"})
 public class ManagedLedgerException extends Exception {
     public ManagedLedgerException(String msg) {
@@ -151,6 +153,12 @@ public class ManagedLedgerException extends Exception {
 
     public static class CursorNotFoundException extends ManagedLedgerException {
         public CursorNotFoundException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class ManagedLedgerInterceptException extends ManagedLedgerException {
+        public ManagedLedgerInterceptException(String msg) {
             super(msg);
         }
     }

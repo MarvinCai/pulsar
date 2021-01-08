@@ -21,6 +21,7 @@ package org.apache.pulsar.common.protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
@@ -98,10 +99,8 @@ public class Markers {
     public static ReplicatedSubscriptionsSnapshotRequest parseReplicatedSubscriptionsSnapshotRequest(ByteBuf payload)
             throws IOException {
         ByteBufCodedInputStream inStream = ByteBufCodedInputStream.get(payload);
-        ReplicatedSubscriptionsSnapshotRequest.Builder builder = null;
-
+        ReplicatedSubscriptionsSnapshotRequest.Builder builder = ReplicatedSubscriptionsSnapshotRequest.newBuilder();
         try {
-            builder = ReplicatedSubscriptionsSnapshotRequest.newBuilder();
             return builder.mergeFrom(inStream, null).build();
         } finally {
             builder.recycle();
@@ -147,10 +146,8 @@ public class Markers {
     public static ReplicatedSubscriptionsSnapshotResponse parseReplicatedSubscriptionsSnapshotResponse(ByteBuf payload)
             throws IOException {
         ByteBufCodedInputStream inStream = ByteBufCodedInputStream.get(payload);
-        ReplicatedSubscriptionsSnapshotResponse.Builder builder = null;
-
+        ReplicatedSubscriptionsSnapshotResponse.Builder builder = ReplicatedSubscriptionsSnapshotResponse.newBuilder();
         try {
-            builder = ReplicatedSubscriptionsSnapshotResponse.newBuilder();
             return builder.mergeFrom(inStream, null).build();
         } finally {
             builder.recycle();
@@ -197,10 +194,8 @@ public class Markers {
     public static ReplicatedSubscriptionsSnapshot parseReplicatedSubscriptionsSnapshot(ByteBuf payload)
             throws IOException {
         ByteBufCodedInputStream inStream = ByteBufCodedInputStream.get(payload);
-        ReplicatedSubscriptionsSnapshot.Builder builder = null;
-
+        ReplicatedSubscriptionsSnapshot.Builder builder = ReplicatedSubscriptionsSnapshot.newBuilder();
         try {
-            builder = ReplicatedSubscriptionsSnapshot.newBuilder();
             return builder.mergeFrom(inStream, null).build();
         } finally {
             builder.recycle();
@@ -242,10 +237,8 @@ public class Markers {
     public static ReplicatedSubscriptionsUpdate parseReplicatedSubscriptionsUpdate(ByteBuf payload)
             throws IOException {
         ByteBufCodedInputStream inStream = ByteBufCodedInputStream.get(payload);
-        ReplicatedSubscriptionsUpdate.Builder builder = null;
-
+        ReplicatedSubscriptionsUpdate.Builder builder = ReplicatedSubscriptionsUpdate.newBuilder();
         try {
-            builder = ReplicatedSubscriptionsUpdate.newBuilder();
             return builder.mergeFrom(inStream, null).build();
         } finally {
             builder.recycle();
@@ -260,8 +253,9 @@ public class Markers {
     }
 
     public static ByteBuf newTxnCommitMarker(long sequenceId, long txnMostBits,
-                                             long txnLeastBits, MessageIdData messageIdData) {
-        return newTxnMarker(MarkerType.TXN_COMMIT, sequenceId, txnMostBits, txnLeastBits, Optional.of(messageIdData));
+                                             long txnLeastBits, List<MessageIdData> messageIdDataList) {
+        return newTxnMarker(
+                MarkerType.TXN_COMMIT, sequenceId, txnMostBits, txnLeastBits, Optional.of(messageIdDataList));
     }
 
     public static boolean isTxnAbortMarker(MessageMetadata msgMetadata) {
@@ -271,17 +265,15 @@ public class Markers {
     }
 
     public static ByteBuf newTxnAbortMarker(long sequenceId, long txnMostBits,
-                                            long txnLeastBits) {
-        return newTxnMarker(MarkerType.TXN_ABORT, sequenceId, txnMostBits, txnLeastBits, Optional.empty());
+                                            long txnLeastBits, List<MessageIdData> messageIdDataList) {
+        return newTxnMarker(
+                MarkerType.TXN_ABORT, sequenceId, txnMostBits, txnLeastBits, Optional.of(messageIdDataList));
     }
 
     public static PulsarMarkers.TxnCommitMarker parseCommitMarker(ByteBuf payload) throws IOException {
         ByteBufCodedInputStream inStream = ByteBufCodedInputStream.get(payload);
-
-        PulsarMarkers.TxnCommitMarker.Builder builder = null;
-
+        PulsarMarkers.TxnCommitMarker.Builder builder = PulsarMarkers.TxnCommitMarker.newBuilder();
         try {
-            builder = PulsarMarkers.TxnCommitMarker.newBuilder();
             return builder.mergeFrom(inStream, null).build();
         } finally {
             builder.recycle();
@@ -291,7 +283,7 @@ public class Markers {
 
     @SneakyThrows
     private static ByteBuf newTxnMarker(MarkerType markerType, long sequenceId, long txnMostBits,
-                                        long txnLeastBits, Optional<MessageIdData> messageIdData) {
+                                        long txnLeastBits, Optional<List<MessageIdData>> messageIdDataList) {
         MessageMetadata.Builder msgMetadataBuilder = MessageMetadata.newBuilder();
         msgMetadataBuilder.setPublishTime(System.currentTimeMillis());
         msgMetadataBuilder.setProducerName("pulsar.txn.marker");
@@ -303,17 +295,14 @@ public class Markers {
         MessageMetadata msgMetadata = msgMetadataBuilder.build();
 
         ByteBuf payload;
-        if (messageIdData.isPresent()) {
-            PulsarMarkers.TxnCommitMarker commitMarker = PulsarMarkers.TxnCommitMarker.newBuilder()
-                                                                                      .setMessageId(messageIdData.get())
-                                                                                      .build();
-            int size = commitMarker.getSerializedSize();
-            payload = PooledByteBufAllocator.DEFAULT.buffer(size);
-            ByteBufCodedOutputStream outStream = ByteBufCodedOutputStream.get(payload);
-            commitMarker.writeTo(outStream);
-        } else {
-            payload = PooledByteBufAllocator.DEFAULT.buffer();
-        }
+        PulsarMarkers.TxnCommitMarker.Builder commitMarkerBuilder = PulsarMarkers.TxnCommitMarker.newBuilder();
+
+        messageIdDataList.ifPresent(commitMarkerBuilder::addAllMessageId);
+        PulsarMarkers.TxnCommitMarker commitMarker = commitMarkerBuilder.build();
+        int size = commitMarker.getSerializedSize();
+        payload = PooledByteBufAllocator.DEFAULT.buffer(size);
+        ByteBufCodedOutputStream outStream = ByteBufCodedOutputStream.get(payload);
+        commitMarker.writeTo(outStream);
 
         try {
             return Commands.serializeMetadataAndPayload(ChecksumType.Crc32c, msgMetadata, payload);
@@ -321,6 +310,12 @@ public class Markers {
             payload.release();
             msgMetadata.recycle();
             msgMetadataBuilder.recycle();
+            commitMarkerBuilder.recycle();
+            if (messageIdDataList.isPresent()) {
+                for (MessageIdData messageIdData : messageIdDataList.get()) {
+                    messageIdData.recycle();
+                }
+            }
         }
     }
 }

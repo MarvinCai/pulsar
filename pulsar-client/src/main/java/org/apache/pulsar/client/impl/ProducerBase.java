@@ -86,8 +86,7 @@ public abstract class ProducerBase<T> extends HandlerState implements Producer<T
         return new TypedMessageBuilderImpl<>(this, schema);
     }
 
-    // TODO: add this method to the Producer interface
-    // @Override
+    @Override
     public TypedMessageBuilder<T> newMessage(Transaction txn) {
         checkArgument(txn instanceof TransactionImpl);
 
@@ -101,6 +100,8 @@ public abstract class ProducerBase<T> extends HandlerState implements Producer<T
     }
 
     abstract CompletableFuture<MessageId> internalSendAsync(Message<?> message);
+
+    abstract CompletableFuture<MessageId> internalSendWithTxnAsync(Message<?> message, Transaction txn);
 
     public MessageId send(Message<?> message) throws PulsarClientException {
         try {

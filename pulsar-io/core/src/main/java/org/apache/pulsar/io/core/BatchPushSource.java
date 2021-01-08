@@ -18,6 +18,8 @@
  */
 package org.apache.pulsar.io.core;
 
+import org.apache.pulsar.common.classification.InterfaceAudience;
+import org.apache.pulsar.common.classification.InterfaceStability;
 import org.apache.pulsar.functions.api.Record;
 
 import java.util.concurrent.LinkedBlockingQueue;
@@ -28,12 +30,29 @@ import java.util.concurrent.LinkedBlockingQueue;
  * because BatchPushSource can emit a record using the consume method that they
  * invoke whenever they have data to be published to Pulsar.
  */
+@InterfaceAudience.Public
+@InterfaceStability.Evolving
 public abstract class BatchPushSource<T> implements BatchSource<T> {
 
     private static class NullRecord implements Record {
         @Override
         public Object getValue() {
             return null;
+        }
+    }
+
+    private static class ErrorNotifierRecord implements Record {
+        private Exception e;
+        public ErrorNotifierRecord(Exception e) {
+            this.e = e;
+        }
+        @Override
+        public Object getValue() {
+            return null;
+        }
+
+        public Exception getException() {
+            return e;
         }
     }
 
@@ -48,6 +67,9 @@ public abstract class BatchPushSource<T> implements BatchSource<T> {
     @Override
     public Record<T> readNext() throws Exception {
         Record<T> record = queue.take();
+        if (record instanceof ErrorNotifierRecord) {
+            throw ((ErrorNotifierRecord) record).getException();
+        }
         if (record instanceof NullRecord) {
             return null;
         } else {
@@ -79,5 +101,13 @@ public abstract class BatchPushSource<T> implements BatchSource<T> {
      */
     public int getQueueLength() {
         return DEFAULT_QUEUE_LENGTH;
+    }
+
+    /**
+     * Allows the source to notify errors asynchronously
+     * @param ex
+     */
+    public void notifyError(Exception ex) {
+        consume(new ErrorNotifierRecord(ex));
     }
 }

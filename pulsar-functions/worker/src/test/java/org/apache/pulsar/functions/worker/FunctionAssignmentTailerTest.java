@@ -138,7 +138,7 @@ public class FunctionAssignmentTailerTest {
         doReturn(readerBuilder).when(readerBuilder).readCompacted(anyBoolean());
 
         doReturn(reader).when(readerBuilder).create();
-        WorkerService workerService = mock(WorkerService.class);
+        PulsarWorkerService workerService = mock(PulsarWorkerService.class);
         doReturn(pulsarClient).when(workerService).getClient();
         doReturn(mock(PulsarAdmin.class)).when(workerService).getFunctionAdmin();
 
@@ -151,7 +151,7 @@ public class FunctionAssignmentTailerTest {
 
         functionAssignmentTailer.start();
 
-        // verify no errors occured
+        // verify no errors occurred
         verify(errorNotifier, times(0)).triggerError(any());
 
         messageList.add(message1);
@@ -253,7 +253,7 @@ public class FunctionAssignmentTailerTest {
         doReturn(readerBuilder).when(readerBuilder).readCompacted(anyBoolean());
 
         doReturn(reader).when(readerBuilder).create();
-        WorkerService workerService = mock(WorkerService.class);
+        PulsarWorkerService workerService = mock(PulsarWorkerService.class);
         doReturn(pulsarClient).when(workerService).getClient();
         doReturn(mock(PulsarAdmin.class)).when(workerService).getFunctionAdmin();
 
@@ -376,7 +376,7 @@ public class FunctionAssignmentTailerTest {
         doReturn(readerBuilder).when(readerBuilder).readCompacted(anyBoolean());
 
         doReturn(reader).when(readerBuilder).create();
-        WorkerService workerService = mock(WorkerService.class);
+        PulsarWorkerService workerService = mock(PulsarWorkerService.class);
         doReturn(pulsarClient).when(workerService).getClient();
         doReturn(mock(PulsarAdmin.class)).when(workerService).getFunctionAdmin();
 

@@ -74,35 +74,37 @@ public class TypedMessageBuilderImpl<T> implements TypedMessageBuilder<T> {
         }
         msgMetadataBuilder.setTxnidLeastBits(txn.getTxnIdLeastBits());
         msgMetadataBuilder.setTxnidMostBits(txn.getTxnIdMostBits());
-        long sequenceId = txn.nextSequenceId();
-        msgMetadataBuilder.setSequenceId(sequenceId);
-        return sequenceId;
+        return -1L;
     }
 
     @Override
     public MessageId send() throws PulsarClientException {
-        if (null != txn) {
-            // NOTE: it makes no sense to send a transactional message in a blocking way.
-            //       because #send only completes when a transaction is committed or aborted.
-            throw new IllegalStateException("Use sendAsync to send a transactional message");
+        try {
+            // enqueue the message to the buffer
+            CompletableFuture<MessageId> sendFuture = sendAsync();
+
+            if (!sendFuture.isDone()) {
+                // the send request wasn't completed yet (e.g. not failing at enqueuing), then attempt to triggerFlush it out
+                producer.triggerFlush();
+            }
+
+            return sendFuture.get();
+        } catch (Exception e) {
+            throw PulsarClientException.unwrap(e);
         }
-        return producer.send(getMessage());
     }
 
     @Override
     public CompletableFuture<MessageId> sendAsync() {
-        long sequenceId = beforeSend();
-        CompletableFuture<MessageId> sendFuture = producer.internalSendAsync(getMessage());
+        Message<T> message = getMessage();
+        CompletableFuture<MessageId> sendFuture;
         if (txn != null) {
-            // it is okay that we register produced topic after sending the messages. because
-            // the transactional messages will not be visible for consumers until the transaction
-            // is committed.
-            txn.registerProducedTopic(producer.getTopic());
-            // register the sendFuture as part of the transaction
-            return txn.registerSendOp(sequenceId, sendFuture);
+            sendFuture = producer.internalSendWithTxnAsync(message, txn);
+            txn.registerSendOp(sendFuture);
         } else {
-            return sendFuture;
+            sendFuture = producer.internalSendAsync(message);
         }
+        return sendFuture;
     }
 
     @Override
@@ -239,27 +241,36 @@ public class TypedMessageBuilderImpl<T> implements TypedMessageBuilder<T> {
     @Override
     public TypedMessageBuilder<T> loadConf(Map<String, Object> config) {
         config.forEach((key, value) -> {
-            if (key.equals(CONF_KEY)) {
-                this.key(checkType(value, String.class));
-            } else if (key.equals(CONF_PROPERTIES)) {
-                this.properties(checkType(value, Map.class));
-            } else if (key.equals(CONF_EVENT_TIME)) {
-                this.eventTime(checkType(value, Long.class));
-            } else if (key.equals(CONF_SEQUENCE_ID)) {
-                this.sequenceId(checkType(value, Long.class));
-            } else if (key.equals(CONF_REPLICATION_CLUSTERS)) {
-                this.replicationClusters(checkType(value, List.class));
-            } else if (key.equals(CONF_DISABLE_REPLICATION)) {
-                boolean disableReplication = checkType(value, Boolean.class);
-                if (disableReplication) {
-                    this.disableReplication();
-                }
-            } else if (key.equals(CONF_DELIVERY_AFTER_SECONDS)) {
-                this.deliverAfter(checkType(value, Long.class), TimeUnit.SECONDS);
-            } else if (key.equals(CONF_DELIVERY_AT)) {
-                this.deliverAt(checkType(value, Long.class));
-            } else {
-                throw new RuntimeException("Invalid message config key '" + key + "'");
+            switch (key) {
+                case CONF_KEY:
+                    this.key(checkType(value, String.class));
+                    break;
+                case CONF_PROPERTIES:
+                    this.properties(checkType(value, Map.class));
+                    break;
+                case CONF_EVENT_TIME:
+                    this.eventTime(checkType(value, Long.class));
+                    break;
+                case CONF_SEQUENCE_ID:
+                    this.sequenceId(checkType(value, Long.class));
+                    break;
+                case CONF_REPLICATION_CLUSTERS:
+                    this.replicationClusters(checkType(value, List.class));
+                    break;
+                case CONF_DISABLE_REPLICATION:
+                    boolean disableReplication = checkType(value, Boolean.class);
+                    if (disableReplication) {
+                        this.disableReplication();
+                    }
+                    break;
+                case CONF_DELIVERY_AFTER_SECONDS:
+                    this.deliverAfter(checkType(value, Long.class), TimeUnit.SECONDS);
+                    break;
+                case CONF_DELIVERY_AT:
+                    this.deliverAt(checkType(value, Long.class));
+                    break;
+                default:
+                    throw new RuntimeException("Invalid message config key '" + key + "'");
             }
         });
         return this;

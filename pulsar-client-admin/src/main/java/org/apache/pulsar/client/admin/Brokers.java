@@ -21,7 +21,6 @@ package org.apache.pulsar.client.admin;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
 import org.apache.pulsar.client.admin.PulsarAdminException.NotAuthorizedException;
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException;
 import org.apache.pulsar.common.conf.InternalConfigurationData;
@@ -215,6 +214,19 @@ public interface Brokers {
      * @return internal configuration data.
      */
     CompletableFuture<InternalConfigurationData> getInternalConfigurationDataAsync();
+
+    /**
+     * Manually trigger backlogQuotaCheck.
+     *
+     * @throws PulsarAdminException
+     */
+    void backlogQuotaCheck() throws PulsarAdminException;
+
+    /**
+     * Manually trigger backlogQuotaCheck asynchronously.
+     * @return
+     */
+    CompletableFuture<Void> backlogQuotaCheckAsync();
 
     /**
      * Run a healthcheck on the broker.

@@ -214,7 +214,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Override
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void cleanup() throws Exception {
         super.internalCleanup();
     }
@@ -284,7 +284,8 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         policyData.auto_failover_policy.parameters = new HashMap<String, String>();
         policyData.auto_failover_policy.parameters.put("min_limit", "1");
         policyData.auto_failover_policy.parameters.put("usage_threshold", "90");
-        clusters.setNamespaceIsolationPolicy("use", "policy1", policyData);
+        AsyncResponse response = mock(AsyncResponse.class);
+        clusters.setNamespaceIsolationPolicy(response,"use", "policy1", policyData);
         clusters.getNamespaceIsolationPolicies("use");
 
         try {
@@ -588,7 +589,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         }
 
         AsyncResponse response = mock(AsyncResponse.class);
-        namespaces.deleteNamespace(response, "my-tenant", "use", "my-namespace", false);
+        namespaces.deleteNamespace(response, "my-tenant", "use", "my-namespace", false, false);
         ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
         verify(response, timeout(5000).times(1)).resume(captor.capture());
         assertEquals(captor.getValue().getStatus(), Status.NO_CONTENT.getStatusCode());

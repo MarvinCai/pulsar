@@ -83,7 +83,7 @@ public class TopicsConsumerImplTest extends ProducerConsumerBase {
     }
 
     @Override
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void cleanup() throws Exception {
         super.internalCleanup();
     }
@@ -441,7 +441,7 @@ public class TopicsConsumerImplTest extends ProducerConsumerBase {
             String data = new String(message.getData());
             log.debug("Consumer received : " + data);
             consumer.acknowledge(message);
-            message = consumer.receive(100, TimeUnit.MILLISECONDS);
+            message = consumer.receive(2000, TimeUnit.MILLISECONDS);
         }
         assertEquals(redelivered, 30);
         size =  ((MultiTopicsConsumerImpl<byte[]>) consumer).getUnAckedMessageTracker().size();
@@ -472,7 +472,7 @@ public class TopicsConsumerImplTest extends ProducerConsumerBase {
         }).get();
         ((MultiTopicsConsumerImpl) consumer).subscribeAsync(topicName, 3).handle((res, exception) -> {
             assertTrue(exception instanceof PulsarClientException.AlreadyClosedException);
-            assertEquals(((PulsarClientException.AlreadyClosedException) exception).getMessage(), "Topic name not valid");
+            assertEquals(((PulsarClientException.AlreadyClosedException) exception).getMessage(), "Already subscribed to " + topicName);
             return null;
         }).get();
     }
@@ -603,6 +603,44 @@ public class TopicsConsumerImplTest extends ProducerConsumerBase {
         producer1.close();
         producer2.close();
         producer3.close();
+    }
+
+
+    @Test
+    public void testResubscribeSameTopic() throws Exception {
+        final String localTopicName = "TopicsConsumerResubscribeSameTopicTest";
+        final String localPartitionName = localTopicName + "-partition-0";
+        final String topicNameWithNamespace = "public/default/" + localTopicName;
+        final String topicNameWithDomain = "persistent://" + topicNameWithNamespace;
+
+        admin.topics().createPartitionedTopic(localTopicName, 2);
+
+        Consumer<byte[]> consumer = pulsarClient.newConsumer()
+                .topic(localTopicName)
+                .subscriptionName("SubscriptionName")
+                .subscribe();
+
+        assertTrue(consumer instanceof MultiTopicsConsumerImpl);
+        MultiTopicsConsumerImpl<byte[]> multiTopicsConsumer = (MultiTopicsConsumerImpl<byte[]>) consumer;
+
+        multiTopicsConsumer.subscribeAsync(topicNameWithNamespace, false).handle((res, exception) -> {
+            assertTrue(exception instanceof PulsarClientException.AlreadyClosedException);
+            assertEquals(exception.getMessage(), "Already subscribed to " + topicNameWithNamespace);
+            return null;
+        }).get();
+        multiTopicsConsumer.subscribeAsync(topicNameWithDomain, false).handle((res, exception) -> {
+            assertTrue(exception instanceof PulsarClientException.AlreadyClosedException);
+            assertEquals(exception.getMessage(), "Already subscribed to " + topicNameWithDomain);
+            return null;
+        }).get();
+        multiTopicsConsumer.subscribeAsync(localPartitionName, false).handle((res, exception) -> {
+            assertTrue(exception instanceof PulsarClientException.AlreadyClosedException);
+            assertEquals(exception.getMessage(), "Already subscribed to " + localPartitionName);
+            return null;
+        }).get();
+
+        consumer.unsubscribe();
+        consumer.close();
     }
 
 

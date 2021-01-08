@@ -18,6 +18,7 @@
  */
 package org.apache.bookkeeper.mledger.impl;
 
+import org.apache.pulsar.common.policies.data.EnsemblePlacementPolicyConfig;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,10 +65,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
+import org.apache.bookkeeper.client.EnsemblePlacementPolicy;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.PulsarMockBookKeeper;
 import org.apache.bookkeeper.client.PulsarMockLedgerHandle;
@@ -1852,6 +1856,33 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         ml.close();
     }
 
+    /**
+     * Set retention time = 0 and create a empty ledger,
+     * first position can't higher than last after trim ledgers.
+     * Even if we do not have subscriptions the ledger
+     * that contains the lastConfirmedEntry will be deleted anyway.
+     */
+    @Test
+    public void testRetention0WithEmptyLedgerWithoutCursors() throws Exception {
+        ManagedLedgerFactory factory = new ManagedLedgerFactoryImpl(bkc, bkc.getZkHandle());
+        ManagedLedgerConfig config = new ManagedLedgerConfig();
+        config.setRetentionTime(0, TimeUnit.MINUTES);
+        config.setMaxEntriesPerLedger(1);
+
+        ManagedLedgerImpl ml = (ManagedLedgerImpl) factory.open("deletion_after_retention_test_ledger", config);
+        ml.addEntry("message1".getBytes());
+        ml.close();
+
+        // reopen ml
+        ml = (ManagedLedgerImpl) factory.open("deletion_after_retention_test_ledger", config);
+        ml.internalTrimConsumedLedgers(CompletableFuture.completedFuture(null));
+
+        assertTrue(ml.getFirstPosition().ledgerId <= ml.lastConfirmedEntry.ledgerId);
+        assertFalse(ml.getLedgersInfo().containsKey(ml.lastConfirmedEntry.ledgerId),
+                "the ledger at lastConfirmedEntry has not been trimmed!");
+        ml.close();
+    }
+
     @Test
     public void testInfiniteRetention() throws Exception {
         ManagedLedgerFactory factory = new ManagedLedgerFactoryImpl(bkc, bkc.getZkHandle());
@@ -2192,6 +2223,39 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
 
         assertEquals(ledger.getLedgersInfoAsList().size(), 1);
         assertEquals(c1.getMarkDeletedPosition(), ledger.lastConfirmedEntry);
+    }
+
+    @Test
+    public void testLazyRecoverCursor() throws Exception {
+        ManagedLedger ledger = factory.open("testLedger");
+        ManagedCursor cursor = ledger.openCursor("testCursor");
+
+        ledger.addEntry("entry-1".getBytes());
+        Position p1 = ledger.addEntry("entry-2".getBytes());
+        cursor.markDelete(p1);
+
+        // Re-open from a different factory trigger recovery.
+        ManagedLedgerFactory factory2 = new ManagedLedgerFactoryImpl(bkc, zkc);
+
+        // Simulating time consuming cursor recovery.
+        CompletableFuture<Void> future = bkc.promiseAfter(2);
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DefaultThreadFactory("lazyCursorRecovery"));
+        scheduledExecutorService.schedule(() -> {
+            future.complete(null);
+        }, 10, TimeUnit.SECONDS);
+
+        ManagedLedgerConfig managedLedgerConfig = new ManagedLedgerConfig();
+        managedLedgerConfig.setLazyCursorRecovery(true);
+        Long startLedgerRecovery = System.currentTimeMillis();
+
+        // Check ledger recovered before time consuming cursor recovery complete.
+        ledger = factory2.open("testLedger", managedLedgerConfig);
+        assertTrue(System.currentTimeMillis() - startLedgerRecovery < 5000);
+
+        // Check cursor recovered successfully.
+        cursor = ledger.openCursor("testCursor");
+        assertEquals(cursor.getMarkDeletedPosition(), p1);
+        factory2.shutdown();
     }
 
     @Test
@@ -2727,6 +2791,23 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         } catch (ManagedLedgerNotFoundException e) {
             // Expected
         }
+    }
+
+    private abstract class MockedPlacementPolicy implements EnsemblePlacementPolicy{}
+
+    @Test(timeOut = 10000)
+    public void testManagedLedgerWithPlacementPolicyInCustomMetadata() throws Exception {
+        ManagedLedgerConfig managedLedgerConfig = new ManagedLedgerConfig();
+        managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyClassName(MockedPlacementPolicy.class);
+        managedLedgerConfig.setBookKeeperEnsemblePlacementPolicyProperties(Collections.singletonMap("key", "value"));
+        ManagedLedgerImpl ledger = (ManagedLedgerImpl) factory.open("my_test_ledger", managedLedgerConfig);
+        assertFalse(ledger.createdLedgerCustomMetadata.isEmpty());
+        byte[] configData = ledger.createdLedgerCustomMetadata.get(EnsemblePlacementPolicyConfig.ENSEMBLE_PLACEMENT_POLICY_CONFIG);
+        EnsemblePlacementPolicyConfig config = EnsemblePlacementPolicyConfig.decode(configData);
+        assertEquals(config.getPolicyClass().getName(), MockedPlacementPolicy.class.getName());
+        assertEquals(config.getProperties().size(), 1);
+        assertTrue(config.getProperties().containsKey("key"));
+        assertEquals(config.getProperties().get("key"), "value");
     }
 
     private void setFieldValue(Class clazz, Object classObj, String fieldName, Object fieldValue) throws Exception {

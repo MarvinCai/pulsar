@@ -28,9 +28,10 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClient;
 import org.apache.pulsar.client.impl.transaction.TransactionCoordinatorClientImpl;
 import org.apache.pulsar.zookeeper.LocalBookkeeperEnsemble;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterClass;
 
 public class TransactionMetaStoreTestBase {
 
@@ -39,7 +40,7 @@ public class TransactionMetaStoreTestBase {
     LocalBookkeeperEnsemble bkEnsemble;
     protected PulsarAdmin[] pulsarAdmins = new PulsarAdmin[BROKER_COUNT];
     protected PulsarClient pulsarClient;
-    protected static final int BROKER_COUNT = 5;
+    protected static int BROKER_COUNT = 5;
     protected ServiceConfiguration[] configurations = new ServiceConfiguration[BROKER_COUNT];
     protected PulsarService[] pulsarServices = new PulsarService[BROKER_COUNT];
 
@@ -68,9 +69,11 @@ public class TransactionMetaStoreTestBase {
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setDefaultNumberOfNamespaceBundles(1);
             config.setLoadBalancerEnabled(false);
+            config.setAcknowledgmentAtBatchIndexLevelEnabled(true);
+            config.setTransactionCoordinatorEnabled(true);
             configurations[i] = config;
 
-            pulsarServices[i] = new PulsarService(config);
+            pulsarServices[i] = Mockito.spy(new PulsarService(config));
             pulsarServices[i].start();
 
             pulsarAdmins[i] = PulsarAdmin.builder()
@@ -80,6 +83,8 @@ public class TransactionMetaStoreTestBase {
 
         Thread.sleep(100);
 
+        afterPulsarStart();
+
         pulsarClient = PulsarClient.builder().
             serviceUrl(pulsarServices[0].getBrokerServiceUrl())
             .build();
@@ -87,5 +92,26 @@ public class TransactionMetaStoreTestBase {
         transactionCoordinatorClient.start();
 
         Thread.sleep(3000);
+    }
+
+    public void afterPulsarStart() throws Exception {
+        log.info("[afterPulsarStart]");
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void shutdownAll() throws Exception {
+        for (PulsarService service : pulsarServices) {
+            if (service != null) {
+                service.close();
+            }
+        }
+        for (PulsarAdmin admin : pulsarAdmins) {
+            if (admin != null) {
+                admin.close();
+            }
+        }
+        if (pulsarClient != null) {
+            pulsarClient.close();
+        }
     }
 }

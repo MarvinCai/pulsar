@@ -19,6 +19,9 @@
 package org.apache.pulsar.broker.transaction.buffer;
 
 import com.google.common.collect.Sets;
+import org.apache.pulsar.broker.service.BrokerService;
+import org.apache.pulsar.broker.service.Subscription;
+import org.apache.pulsar.broker.service.Topic;
 import org.apache.pulsar.broker.transaction.buffer.impl.TransactionBufferClientImpl;
 import org.apache.pulsar.broker.transaction.coordinator.TransactionMetaStoreTestBase;
 import org.apache.pulsar.client.api.transaction.TransactionBufferClient;
@@ -27,6 +30,8 @@ import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.pulsar.common.policies.data.TenantInfo;
+import org.apache.pulsar.common.util.collections.ConcurrentOpenHashMap;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -34,9 +39,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.testng.annotations.AfterClass;
 
 public class TransactionBufferClientTest extends TransactionMetaStoreTestBase {
 
@@ -44,6 +52,7 @@ public class TransactionBufferClientTest extends TransactionMetaStoreTestBase {
     private TransactionBufferClient tbClient;
     TopicName partitionedTopicName = TopicName.get("persistent", "public", "test", "tb-client");
     int partitions = 10;
+    BrokerService[] brokerServices;
 
     @BeforeClass
     void init() throws Exception {
@@ -59,12 +68,51 @@ public class TransactionBufferClientTest extends TransactionMetaStoreTestBase {
                 ((PulsarClientImpl) pulsarClient).getCnxPool());
     }
 
+    @AfterClass(alwaysRun = true)
+    public void shutdownClient() throws Exception {
+        if (tbClient != null) {
+            tbClient.close();
+        }
+        if (brokerServices != null) {
+            for (BrokerService bs : brokerServices) {
+                bs.close();
+            }
+            brokerServices = null;
+        }
+    }
+
+    @Override
+    public void afterPulsarStart() throws Exception {
+        super.afterPulsarStart();
+        brokerServices = new BrokerService[pulsarServices.length];
+        for (int i = 0; i < pulsarServices.length; i++) {
+            Subscription mockSubscription = Mockito.mock(Subscription.class);
+            Mockito.when(mockSubscription.endTxn(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyInt()))
+                    .thenReturn(CompletableFuture.completedFuture(null));
+
+            Topic mockTopic = Mockito.mock(Topic.class);
+            Mockito.when(mockTopic.endTxn(Mockito.any(), Mockito.anyInt(), Mockito.anyList()))
+                    .thenReturn(CompletableFuture.completedFuture(null));
+            Mockito.when(mockTopic.getSubscription(Mockito.any())).thenReturn(mockSubscription);
+
+            ConcurrentOpenHashMap<String, CompletableFuture<Optional<Topic>>> topicMap =
+                    Mockito.mock(ConcurrentOpenHashMap.class);
+            Mockito.when(topicMap.get(Mockito.anyString())).thenReturn(
+                    CompletableFuture.completedFuture(Optional.of(mockTopic)));
+
+            BrokerService brokerService = Mockito.spy(new BrokerService(pulsarServices[i]));
+            brokerServices[i] = brokerService;
+            Mockito.when(brokerService.getTopics()).thenReturn(topicMap);
+            Mockito.when(pulsarServices[i].getBrokerService()).thenReturn(brokerService);
+        }
+    }
+
     @Test
     public void testCommitOnTopic() throws ExecutionException, InterruptedException {
         List<CompletableFuture<TxnID>> futures = new ArrayList<>();
         for (int i = 0; i < partitions; i++) {
             String topic = partitionedTopicName.getPartition(i).toString();
-            futures.add(tbClient.commitTxnOnTopic(topic, 1L, i));
+            futures.add(tbClient.commitTxnOnTopic(topic, 1L, i, Collections.emptyList()));
         }
         for (int i = 0; i < futures.size(); i++) {
             Assert.assertEquals(futures.get(i).get().getMostSigBits(), 1L);
@@ -77,7 +125,7 @@ public class TransactionBufferClientTest extends TransactionMetaStoreTestBase {
         List<CompletableFuture<TxnID>> futures = new ArrayList<>();
         for (int i = 0; i < partitions; i++) {
             String topic = partitionedTopicName.getPartition(i).toString();
-            futures.add(tbClient.abortTxnOnTopic(topic, 1L, i));
+            futures.add(tbClient.abortTxnOnTopic(topic, 1L, i, Collections.emptyList()));
         }
         for (int i = 0; i < futures.size(); i++) {
             Assert.assertEquals(futures.get(i).get().getMostSigBits(), 1L);

@@ -79,7 +79,7 @@ public class KeyStoreTlsProducerConsumerTestWithAuth extends ProducerConsumerBas
         super.init();
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     @Override
     protected void cleanup() throws Exception {
         super.internalCleanup();
@@ -108,6 +108,7 @@ public class KeyStoreTlsProducerConsumerTestWithAuth extends ProducerConsumerBas
         Set<String> providers = new HashSet<>();
         providers.add(AuthenticationProviderTls.class.getName());
         conf.setAuthenticationProviders(providers);
+        conf.setNumExecutorThreadPoolSize(5);
     }
 
     protected void internalSetUpForClient(boolean addCertificates, String lookupUrl) throws Exception {

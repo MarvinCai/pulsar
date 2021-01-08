@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.functions.instance;
 
-import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -127,6 +126,7 @@ public class JavaInstance implements AutoCloseable {
 
     @Override
     public void close() {
+        context.close();
     }
 
     public Map<String, Double> getAndResetMetrics() {

@@ -21,7 +21,6 @@ package org.apache.pulsar.client.api;
 import static org.mockito.Mockito.spy;
 
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -92,6 +91,7 @@ public class AuthenticationTlsHostnameVerificationTest extends ProducerConsumerB
         conf.setAuthenticationProviders(providers);
 
         conf.setClusterName("test");
+        conf.setNumExecutorThreadPoolSize(5);
 
         super.init();
 
@@ -123,7 +123,7 @@ public class AuthenticationTlsHostnameVerificationTest extends ProducerConsumerB
         admin.namespaces().createNamespace("my-property/my-ns", Sets.newHashSet("test"));
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     @Override
     protected void cleanup() throws Exception {
         if (!methodName.equals("testDefaultHostVerifier")) {
@@ -230,7 +230,7 @@ public class AuthenticationTlsHostnameVerificationTest extends ProducerConsumerB
     }
 
     /**
-     * This test verifies {@link DefaultHostnameVerifier} behavior and gives fair idea about host matching result
+     * This test verifies {@link TlsHostnameVerifier} behavior and gives fair idea about host matching result
      *
      * @throws Exception
      */

@@ -35,6 +35,7 @@ import org.apache.pulsar.client.api.HashingScheme;
 import org.apache.pulsar.client.api.MessageCrypto;
 import org.apache.pulsar.client.api.MessageRouter;
 import org.apache.pulsar.client.api.MessageRoutingMode;
+import org.apache.pulsar.client.api.ProducerAccessMode;
 import org.apache.pulsar.client.api.ProducerCryptoFailureAction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -95,7 +96,11 @@ public class ProducerConfigurationData implements Serializable, Cloneable {
 
     private boolean autoUpdatePartitions = true;
 
+    private long autoUpdatePartitionsIntervalSeconds = 60;
+
     private boolean multiSchema = true;
+
+    private ProducerAccessMode accessMode = ProducerAccessMode.Shared;
 
     private SortedMap<String, String> properties = new TreeMap<>();
 
@@ -163,4 +168,8 @@ public class ProducerConfigurationData implements Serializable, Cloneable {
         return this.batchingPartitionSwitchFrequencyByPublishDelay * batchingMaxPublishDelayMicros;
     }
 
+    public void setAutoUpdatePartitionsIntervalSeconds(int interval, TimeUnit timeUnit) {
+        checkArgument(interval > 0, "interval needs to be > 0");
+        this.autoUpdatePartitionsIntervalSeconds = timeUnit.toSeconds(interval);
+    }
 }

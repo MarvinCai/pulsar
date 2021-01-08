@@ -19,15 +19,13 @@
 package org.apache.pulsar.broker.loadbalance;
 
 import static com.google.common.base.Preconditions.checkState;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.WatchedEvent;
@@ -36,8 +34,6 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A class that provides way to elect the leader among brokers.
@@ -54,6 +50,8 @@ public class LeaderElectionService {
 
     private boolean stopped = true;
 
+    private boolean elected = false;
+
     private final ZooKeeper zkClient;
 
     private final AtomicReference<LeaderBroker> currentLeader = new AtomicReference<LeaderBroker>();
@@ -65,7 +63,7 @@ public class LeaderElectionService {
      * Interface which should be implemented by classes which are interested in the leader election. The listener gets
      * called when current broker becomes the leader.
      */
-    public static interface LeaderListener {
+    public interface LeaderListener {
         void brokerIsTheLeaderNow();
 
         void brokerIsAFollowerNow();
@@ -118,6 +116,7 @@ public class LeaderElectionService {
             LeaderBroker leaderBroker = jsonMapper.readValue(data, LeaderBroker.class);
             currentLeader.set(leaderBroker);
             isLeader.set(false);
+            elected = true;
             leaderListener.brokerIsAFollowerNow();
 
             // If broker comes here it is a follower. Do nothing, wait for the watch to trigger
@@ -135,6 +134,7 @@ public class LeaderElectionService {
                 // Update the current leader and set the flag to true
                 currentLeader.set(new LeaderBroker(leaderBroker.getServiceUrl()));
                 isLeader.set(true);
+                elected = true;
 
                 // Notify the listener that this broker is now the leader so that it can collect usage and start load
                 // manager.
@@ -143,7 +143,8 @@ public class LeaderElectionService {
             } catch (NodeExistsException nee) {
                 // Re-elect the new leader
                 log.warn(
-                        "Got exception [{}] while creating election node because it already exists. Attempting re-election...",
+                        "Got exception [{}] while creating election node because it already exists."
+                                + " Attempting re-election...",
                         nee.getMessage());
                 executor.execute(this::elect);
             } catch (Exception e) {
@@ -198,6 +199,10 @@ public class LeaderElectionService {
 
     public boolean isLeader() {
         return isLeader.get();
+    }
+
+    public boolean isElected() {
+        return elected;
     }
 
 }

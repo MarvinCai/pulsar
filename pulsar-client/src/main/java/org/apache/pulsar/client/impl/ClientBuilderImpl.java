@@ -32,6 +32,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.PulsarClientException.UnsupportedAuthenticationException;
 import org.apache.pulsar.client.api.ServiceUrlProvider;
+import org.apache.pulsar.client.api.SizeUnit;
 import org.apache.pulsar.client.impl.conf.ClientConfigurationData;
 import org.apache.pulsar.client.impl.conf.ConfigurationDataUtils;
 
@@ -291,6 +292,12 @@ public class ClientBuilderImpl implements ClientBuilder {
     }
 
     @Override
+    public ClientBuilder memoryLimit(long memoryLimit, SizeUnit unit) {
+        conf.setMemoryLimitBytes(unit.toBytes(memoryLimit));
+        return this;
+    }
+
+    @Override
     public ClientBuilder clock(Clock clock) {
         conf.setClock(clock);
         return this;
@@ -303,6 +310,12 @@ public class ClientBuilderImpl implements ClientBuilder {
         }
         conf.setProxyServiceUrl(proxyServiceUrl);
         conf.setProxyProtocol(proxyProtocol);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder enableTransaction(boolean enableTransaction) {
+        conf.setEnableTransaction(enableTransaction);
         return this;
     }
 }
