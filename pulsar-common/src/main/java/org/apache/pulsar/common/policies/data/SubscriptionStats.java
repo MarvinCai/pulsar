@@ -50,6 +50,9 @@ public class SubscriptionStats {
     /** Number of messages in the subscription backlog. */
     public long msgBacklog;
 
+    /** Size of backlog in byte. **/
+    public long backlogSize;
+
     /** Number of messages in the subscription backlog that do not contain the delay messages. */
     public long msgBacklogNoDelayed;
 
@@ -116,6 +119,7 @@ public class SubscriptionStats {
         msgOutCounter = 0;
         msgRateRedeliver = 0;
         msgBacklog = 0;
+        backlogSize = 0;
         msgBacklogNoDelayed = 0;
         unackedMessages = 0;
         msgRateExpired = 0;
@@ -137,6 +141,7 @@ public class SubscriptionStats {
         this.msgOutCounter += stats.msgOutCounter;
         this.msgRateRedeliver += stats.msgRateRedeliver;
         this.msgBacklog += stats.msgBacklog;
+        this.backlogSize += stats.backlogSize;
         this.msgBacklogNoDelayed += stats.msgBacklogNoDelayed;
         this.unackedMessages += stats.unackedMessages;
         this.msgRateExpired += stats.msgRateExpired;
