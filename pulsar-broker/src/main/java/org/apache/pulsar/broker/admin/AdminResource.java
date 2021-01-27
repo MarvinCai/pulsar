@@ -47,7 +47,8 @@ import org.apache.pulsar.broker.cache.LocalZooKeeperCacheService;
 import org.apache.pulsar.broker.service.BrokerServiceException;
 import org.apache.pulsar.broker.web.PulsarWebResource;
 import org.apache.pulsar.broker.web.RestException;
-import org.apache.pulsar.common.api.proto.PulsarApi;
+import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace;
 import org.apache.pulsar.common.naming.Constants;
 import org.apache.pulsar.common.naming.NamespaceBundle;
 import org.apache.pulsar.common.naming.NamespaceBundleFactory;
@@ -114,6 +115,10 @@ public abstract class AdminResource extends PulsarWebResource {
 
     protected void zkCreate(String path, byte[] content) throws Exception {
         globalZk().create(path, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+    }
+
+    protected void localZKCreate(String path, byte[] content) throws Exception {
+        localZk().create(path, content, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
     }
 
     protected void zkCreateOptimistic(String path, byte[] content) throws Exception {
@@ -320,6 +325,9 @@ public abstract class AdminResource extends PulsarWebResource {
         } catch (IllegalArgumentException e) {
             throw new RestException(Status.PRECONDITION_FAILED, "Tenant name or namespace is not valid");
         } catch (RestException re) {
+            if (re.getResponse().getStatus() == Status.NOT_FOUND.getStatusCode()) {
+                throw new RestException(Status.NOT_FOUND, "Namespace not found");
+            }
             throw new RestException(Status.PRECONDITION_FAILED, "Namespace does not have any clusters configured");
         } catch (Exception e) {
             log.warn("Failed to validate global cluster configuration : ns={}  emsg={}", namespace, e.getMessage());
@@ -371,6 +379,26 @@ public abstract class AdminResource extends PulsarWebResource {
             }
         } catch (InterruptedException | ExecutionException e) {
             log.error("Failed to validate partitioned topic metadata {}://{}/{}/{}",
+                    domain(), tenant, namespace, topicName, e);
+            throw new RestException(Status.INTERNAL_SERVER_ERROR, "Check topic partition meta failed.");
+        }
+    }
+
+    protected void validateTopicExistedAndCheckAllowAutoCreation(String tenant, String namespace,
+                                                                 String encodedTopic, boolean checkAllowAutoCreation) {
+        try {
+            PartitionedTopicMetadata partitionedTopicMetadata =
+                    pulsar().getBrokerService().fetchPartitionedTopicMetadataAsync(topicName).get();
+            if (partitionedTopicMetadata.partitions < 1) {
+                if (!pulsar().getNamespaceService().checkTopicExists(topicName).get()
+                        && checkAllowAutoCreation
+                        && !pulsar().getBrokerService().isAllowAutoTopicCreation(topicName)) {
+                    throw new RestException(Status.NOT_FOUND,
+                            new PulsarClientException.NotFoundException("Topic not exist"));
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Failed to validate topic existed {}://{}/{}/{}",
                     domain(), tenant, namespace, topicName, e);
             throw new RestException(Status.INTERNAL_SERVER_ERROR, "Check topic partition meta failed.");
         }
@@ -473,13 +501,6 @@ public abstract class AdminResource extends PulsarWebResource {
         }
 
         final ServiceConfiguration config = pulsar().getConfiguration();
-        if (policies.max_producers_per_topic < 1) {
-            policies.max_producers_per_topic = config.getMaxProducersPerTopic();
-        }
-
-        if (policies.max_consumers_per_topic < 1) {
-            policies.max_consumers_per_topic = config.getMaxConsumersPerTopic();
-        }
 
         if (policies.max_consumers_per_subscription < 1) {
             policies.max_consumers_per_subscription = config.getMaxConsumersPerSubscription();
@@ -505,10 +526,6 @@ public abstract class AdminResource extends PulsarWebResource {
 
         if (policies.clusterSubscribeRate.isEmpty()) {
             policies.clusterSubscribeRate.put(cluster, subscribeRate());
-        }
-
-        if (policies.message_ttl_in_seconds == null) {
-            policies.message_ttl_in_seconds = config.getTtlDurationDefaultInSeconds();
         }
     }
 
@@ -794,7 +811,7 @@ public abstract class AdminResource extends PulsarWebResource {
         try {
             String topicPartitionPath = joinPath(MANAGED_LEDGER_PATH_ZNODE,
                     namespaceName.toString(), topicDomain.value());
-            List<String> topics = globalZk().getChildren(topicPartitionPath, false);
+            List<String> topics = localZk().getChildren(topicPartitionPath, false);
             topicPartitions = topics.stream()
                     .map(s -> String.format("%s://%s/%s", topicDomain.value(), namespaceName.toString(), decode(s)))
                     .collect(Collectors.toList());
@@ -936,7 +953,7 @@ public abstract class AdminResource extends PulsarWebResource {
      */
     protected CompletableFuture<Boolean> checkTopicExistsAsync(TopicName topicName) {
         return pulsar().getNamespaceService().getListOfTopics(topicName.getNamespaceObject(),
-                PulsarApi.CommandGetTopicsOfNamespace.Mode.ALL)
+                CommandGetTopicsOfNamespace.Mode.ALL)
                 .thenCompose(topics -> {
                     boolean exists = false;
                     for (String topic : topics) {
