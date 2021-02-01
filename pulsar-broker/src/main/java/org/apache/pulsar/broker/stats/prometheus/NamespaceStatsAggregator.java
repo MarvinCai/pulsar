@@ -64,7 +64,7 @@ public class NamespaceStatsAggregator {
                 topicsMap.forEach((name, topic) -> {
                     getTopicStats(topic, topicStats, includeConsumerMetrics,
                             pulsar.getConfiguration().isExposePreciseBacklogInPrometheus(),
-                            pulsar.getConfiguration().isExposeSubscriptionBacklogSizeInPrometheus());
+                            pulsar.getConfiguration().isExposeSubscriptionBacklokSizeInPrometheus());
 
                     if (includeTopicMetrics) {
                         topicsCount.add(1);
