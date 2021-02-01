@@ -1968,6 +1968,11 @@ public abstract class PulsarFunctionsTest extends PulsarFunctionsTestBase {
             assertEquals(topicStats.subscriptions.size(), 0);
 
         } catch (ContainerExecException e) {
+            log.info("**********************************");
+            log.info(e.getMessage());
+            log.info(e.getResult().getStderr());
+            log.info(e.getResult().getStdout());
+
             fail("Command should have exited with non-zero");
         }
     }
