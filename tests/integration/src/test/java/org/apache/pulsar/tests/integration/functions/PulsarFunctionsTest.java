@@ -1969,9 +1969,9 @@ public abstract class PulsarFunctionsTest extends PulsarFunctionsTestBase {
 
         } catch (ContainerExecException e) {
             log.info("**********************************");
-            log.info(e.getMessage());
-            log.info(e.getResult().getStderr());
-            log.info(e.getResult().getStdout());
+            log.info("message: " + e.getMessage());
+            log.info("stdout: " + e.getResult().getStderr());
+            log.info("stderror: " + e.getResult().getStdout());
 
             fail("Command should have exited with non-zero");
         }
