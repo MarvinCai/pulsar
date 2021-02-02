@@ -364,7 +364,7 @@ public abstract class PulsarFunctionsTest extends PulsarFunctionsTestBase {
                                       String tenant,
                                       String namespace,
                                       String sinkName,
-                                      boolean builtin) throws Exception {
+                                      boolean builtin) throws Exception {run_unit_group
         String[] commands = {
             PulsarCluster.ADMIN_SCRIPT,
             "sink",
