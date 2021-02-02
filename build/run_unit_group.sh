@@ -27,12 +27,12 @@ MVN_TEST_COMMAND='build/retry.sh mvn -B -ntp test'
 
 # Test Groups  -- start --
 function broker_group_1() {
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -Dorg.slf4j.simpleLogger.defaultLogLevel="debug" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
 }
 
 function broker_group_2() {

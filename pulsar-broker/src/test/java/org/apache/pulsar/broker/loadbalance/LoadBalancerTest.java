@@ -745,7 +745,7 @@ public class LoadBalancerTest {
             log.info("Old leader is " +  oldLeader.getServiceUrl());
             for (PulsarService pulsar : activePulsar) {
                 log.info("Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().getCurrentLeader());
-                System.out.println("Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().getCurrentLeader());
+                System.out.println("Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().readCurrentLeader().join());
                 assertEquals(pulsar.getLeaderElectionService().readCurrentLeader().join(), Optional.of(oldLeader));
             }
 
