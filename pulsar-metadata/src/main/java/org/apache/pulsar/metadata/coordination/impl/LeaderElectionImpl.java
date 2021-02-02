@@ -104,6 +104,8 @@ public class LeaderElectionImpl<T> implements LeaderElection<T>, Consumer<Notifi
                     internalState = InternalState.LeaderIsPresent;
                     if (leaderElectionState != LeaderElectionState.Following) {
                         leaderElectionState = LeaderElectionState.Following;
+                        cache.invalidate(path);
+                        log.info("******Invalidating leader cache after leader election to fetch new leader.");
                         try {
                             stateChangesListener.accept(leaderElectionState);
                         } catch (Throwable t) {
@@ -252,22 +254,22 @@ public class LeaderElectionImpl<T> implements LeaderElection<T>, Consumer<Notifi
 
                 if (proposedValue.isPresent()) {
                     elect()
-                            .exceptionally(ex -> {
-                                log.warn("Leader election for path {} has failed", ex);
-                                synchronized (LeaderElectionImpl.this) {
-                                    try {
-                                        stateChangesListener.accept(leaderElectionState);
-                                    } catch (Throwable t) {
-                                        log.warn("Exception in state change listener", t);
-                                    }
+                    .exceptionally(ex -> {
+                        log.warn("Leader election for path {} has failed", ex);
+                        synchronized (LeaderElectionImpl.this) {
+                            try {
+                                stateChangesListener.accept(leaderElectionState);
+                            } catch (Throwable t) {
+                                log.warn("Exception in state change listener", t);
+                            }
 
-                                    executor.schedule(() -> {
-                                        log.info("Retrying Leader election for path {}");
-                                        elect();
-                                    }, LEADER_ELECTION_RETRY_DELAY_SECONDS, TimeUnit.SECONDS);
-                                }
-                                return null;
-                            });
+                            executor.schedule(() -> {
+                                log.info("Retrying Leader election for path {}");
+                                elect();
+                            }, LEADER_ELECTION_RETRY_DELAY_SECONDS, TimeUnit.SECONDS);
+                        }
+                        return null;
+                    });
                 }
             }
         }
