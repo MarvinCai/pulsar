@@ -31,6 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.bookkeeper.common.concurrent.FutureUtils;
@@ -48,10 +49,11 @@ import org.apache.pulsar.metadata.cache.impl.JSONMetadataSerdeSimpleType;
 import org.apache.pulsar.metadata.cache.impl.MetadataSerde;
 
 @Slf4j
-class LeaderElectionImpl<T> implements LeaderElection<T>, Consumer<Notification> {
+public class LeaderElectionImpl<T> implements LeaderElection<T>, Consumer<Notification> {
     private final String path;
     private final MetadataSerde<T> serde;
     private final MetadataStoreExtended store;
+    @Getter
     private final MetadataCache<T> cache;
     private final Consumer<LeaderElectionState> stateChangesListener;
 

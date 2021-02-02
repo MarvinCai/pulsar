@@ -19,6 +19,7 @@
 package org.apache.pulsar.broker.loadbalance;
 
 import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
+import static org.apache.pulsar.broker.loadbalance.LeaderElectionService.ELECTION_ROOT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -31,6 +32,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -75,6 +77,12 @@ import org.apache.pulsar.common.policies.data.Policies;
 import org.apache.pulsar.common.policies.data.ResourceQuota;
 import org.apache.pulsar.common.policies.impl.NamespaceIsolationPolicies;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
+import org.apache.pulsar.metadata.api.GetResult;
+import org.apache.pulsar.metadata.api.MetadataCache;
+import org.apache.pulsar.metadata.cache.impl.JSONMetadataSerdeSimpleType;
+import org.apache.pulsar.metadata.cache.impl.MetadataCacheImpl;
+import org.apache.pulsar.metadata.cache.impl.MetadataSerde;
+import org.apache.pulsar.metadata.coordination.impl.LeaderElectionImpl;
 import org.apache.pulsar.policies.data.loadbalancer.LoadReport;
 import org.apache.pulsar.policies.data.loadbalancer.NamespaceBundleStats;
 import org.apache.pulsar.policies.data.loadbalancer.ResourceUsage;
@@ -741,6 +749,9 @@ public class LoadBalancerTest {
             log.info("*********************************************Current leader is " +  oldLeader.getServiceUrl());
             for (PulsarService pulsar : activePulsar) {
                 log.info("*********************************************Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().readCurrentLeader().join());
+                Optional<GetResult> result = ((MetadataCacheImpl)((LeaderElectionImpl)pulsar.getLeaderElectionService().getLeaderElection()).getCache()).getStore().get(ELECTION_ROOT).get();
+                MetadataSerde<LeaderBroker> serde =  new JSONMetadataSerdeSimpleType<>(TypeFactory.defaultInstance().constructSimpleType(LeaderBroker.class, null));
+                log.info("*********************************************Current leader from ZK for " + pulsar.getWebServiceAddress() + " is " + (result.isPresent()? serde.deserialize(result.get().getValue()) : " not exist"));
             }
             for (PulsarService pulsar : activePulsar) {
                 if (pulsar.getBrokerServiceUrl() != oldLeader.getServiceUrl()) {

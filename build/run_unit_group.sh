@@ -31,8 +31,6 @@ function broker_group_1() {
   $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
   $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
   $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" -DredirectTestOutputToFile=false
 }
 
 function broker_group_2() {

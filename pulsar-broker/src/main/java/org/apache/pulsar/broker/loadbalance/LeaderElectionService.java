@@ -21,6 +21,8 @@ package org.apache.pulsar.broker.loadbalance;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+
+import lombok.Getter;
 import org.apache.pulsar.metadata.api.coordination.CoordinationService;
 import org.apache.pulsar.metadata.api.coordination.LeaderElection;
 import org.apache.pulsar.metadata.api.coordination.LeaderElectionState;
@@ -30,8 +32,8 @@ import org.apache.pulsar.metadata.api.coordination.LeaderElectionState;
  */
 public class LeaderElectionService implements AutoCloseable {
 
-    private static final String ELECTION_ROOT = "/loadbalance/leader";
-
+    public static final String ELECTION_ROOT = "/loadbalance/leader";
+    @Getter
     private final LeaderElection<LeaderBroker> leaderElection;
     private final LeaderBroker localValue;
 

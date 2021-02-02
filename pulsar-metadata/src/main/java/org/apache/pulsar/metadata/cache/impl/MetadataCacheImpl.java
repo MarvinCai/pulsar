@@ -87,8 +87,10 @@ public class MetadataCacheImpl<T> implements MetadataCache<T>, Consumer<Notifica
         return store.get(path)
                 .thenCompose(optRes -> {
                     if (!optRes.isPresent()) {
+                        System.out.println("@@@@@@@@@@@@@@@@@@ Got empty payload from leader election path for path " + path);
                         return FutureUtils.value(Optional.empty());
                     }
+                    System.out.println("@@@@@@@@@@@@@@@@@@ Value read from leader election path for path " + path);
 
                     try {
                         T obj = serde.deserialize(optRes.get().getValue());
