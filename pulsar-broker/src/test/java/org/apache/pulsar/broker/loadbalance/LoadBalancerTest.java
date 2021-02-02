@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReference;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -100,12 +101,11 @@ import org.testng.annotations.Test;
  *
  *
  */
+@Slf4j
 public class LoadBalancerTest {
     LocalBookkeeperEnsemble bkEnsemble;
 
     ExecutorService executor = new ThreadPoolExecutor(5, 20, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-
-    private static final Logger log = LoggerFactory.getLogger(LoadBalancerTest.class);
 
     private static final int MAX_RETRIES = 10;
 
@@ -180,12 +180,17 @@ public class LoadBalancerTest {
             LeaderBroker newLeader) throws InterruptedException {
         int loopCount = 0;
 
-        while (loopCount < MAX_RETRIES) {
+        while (loopCount < 15) {
             Thread.sleep(1000);
             // Check if the new leader is elected. If yes, break without incrementing the loopCount
             if (les.getCurrentLeader().isPresent()) {
                 newLeader = les.getCurrentLeader().get();
-                if (newLeader.equals(oldLeader) == false) {
+                System.out.println("newLeader " + newLeader);
+                System.out.println("oldLeader " + oldLeader);
+                log.info("newLeader " + newLeader);
+                log.info("oldLeader " + oldLeader);
+
+                if (!newLeader.equals(oldLeader)) {
                     break;
                 }
             }
