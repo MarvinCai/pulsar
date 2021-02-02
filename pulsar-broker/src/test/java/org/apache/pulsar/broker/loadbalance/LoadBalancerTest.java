@@ -185,8 +185,8 @@ public class LoadBalancerTest {
             // Check if the new leader is elected. If yes, break without incrementing the loopCount
             if (les.getCurrentLeader().isPresent()) {
                 newLeader = les.getCurrentLeader().get();
-                log.info("newLeader " + newLeader);
-                log.info("oldLeader " + oldLeader);
+                log.info("*********************************************newLeader " + newLeader);
+                log.info("*********************************************oldLeader " + oldLeader);
 
                 if (!newLeader.equals(oldLeader)) {
                     break;
@@ -717,7 +717,7 @@ public class LoadBalancerTest {
         PulsarService[] allServices = new PulsarService[pulsarServices.length];
         System.arraycopy(pulsarServices, 0, allServices, 0, pulsarServices.length);
         for (int i = 0; i < BROKER_COUNT - 1; i++) {
-            log.info("Leader election loop "+ i);
+            log.info("*********************************************Leader election loop "+ i);
             Set<PulsarService> activePulsar = new HashSet<PulsarService>();
             LeaderBroker oldLeader = null;
             PulsarService leaderPulsar = null;
@@ -738,19 +738,21 @@ public class LoadBalancerTest {
                 }
             }
             // Make sure both brokers see the same leader
-            log.info("Current leader is " +  oldLeader.getServiceUrl());
+            log.info("*********************************************Current leader is " +  oldLeader.getServiceUrl());
             for (PulsarService pulsar : activePulsar) {
-                log.info("Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().readCurrentLeader());
+                log.info("*********************************************Current leader for " + pulsar.getWebServiceAddress() + " is " + pulsar.getLeaderElectionService().readCurrentLeader().join());
             }
             for (PulsarService pulsar : activePulsar) {
-                assertEquals(pulsar.getLeaderElectionService().readCurrentLeader().join(), Optional.of(oldLeader));
+                if (pulsar.getBrokerServiceUrl() != oldLeader.getServiceUrl()) {
+                    assertEquals(pulsar.getLeaderElectionService().readCurrentLeader().join(), Optional.of(oldLeader));
+                }
             }
 
             // Do leader election by killing the leader broker
             leaderPulsar.close();
             LeaderBroker newLeader = oldLeader;
             newLeader = loopUntilLeaderChanges(followerPulsar.getLeaderElectionService(), oldLeader, newLeader);
-            log.info("New leader is " + newLeader.getServiceUrl());
+            log.info("*********************************************New leader is " + newLeader.getServiceUrl());
             Assert.assertNotEquals(newLeader, oldLeader);
         }
     }
