@@ -27,21 +27,12 @@ MVN_TEST_COMMAND='build/retry.sh mvn -B -ntp test'
 
 # Test Groups  -- start --
 function broker_group_1() {
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java"
 }
 
 function broker_group_2() {
