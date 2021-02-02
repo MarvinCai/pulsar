@@ -184,28 +184,29 @@ public class LoadBalancerTest {
         bkEnsemble.stop();
     }
 
-    private LeaderBroker loopUntilLeaderChanges(LeaderElectionService les, LeaderBroker oldLeader,
-            LeaderBroker newLeader) throws InterruptedException {
+    private void loopUntilLeaderSettles(Set<PulsarService> activeServices, LeaderBroker oldLeader) throws InterruptedException {
         int loopCount = 0;
+        boolean settled;
 
         while (loopCount < 15) {
+            settled = true;
             Thread.sleep(1000);
             // Check if the new leader is elected. If yes, break without incrementing the loopCount
-            if (les.getCurrentLeader().isPresent()) {
-                newLeader = les.getCurrentLeader().get();
-                log.info("*********************************************newLeader " + newLeader);
-                log.info("*********************************************oldLeader " + oldLeader);
-
-                if (!newLeader.equals(oldLeader)) {
-                    break;
+            for (PulsarService service : activeServices) {
+                if (service.getLeaderElectionService().getCurrentLeader().isPresent()) {
+                    if (service.getLeaderElectionService().getCurrentLeader().get().equals(oldLeader)) {
+                        settled = false;
+                    }
                 }
+            }
+            if (settled) {
+                break;
             }
             ++loopCount;
         }
 
         // Check if maximum retries are already done. If yes, assert.
         Assert.assertNotEquals(loopCount, MAX_RETRIES, "Leader is not changed even after maximum retries.");
-        return newLeader;
     }
 
     /*
@@ -761,8 +762,8 @@ public class LoadBalancerTest {
 
             // Do leader election by killing the leader broker
             leaderPulsar.close();
-            LeaderBroker newLeader = oldLeader;
-            newLeader = loopUntilLeaderChanges(followerPulsar.getLeaderElectionService(), oldLeader, newLeader);
+            loopUntilLeaderSettles(activePulsar, oldLeader);
+            LeaderBroker newLeader = activePulsar.toArray(new PulsarService[activePulsar.size()])[0].getLeaderElectionService().getCurrentLeader().get();
             log.info("*********************************************New leader is " + newLeader.getServiceUrl());
             Assert.assertNotEquals(newLeader, oldLeader);
         }

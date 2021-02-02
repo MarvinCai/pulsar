@@ -20,6 +20,7 @@ package org.apache.pulsar.broker.loadbalance;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import lombok.Getter;
 import org.apache.pulsar.metadata.api.coordination.CoordinationService;
@@ -55,7 +56,11 @@ public class LeaderElectionService implements AutoCloseable {
     }
 
     public Optional<LeaderBroker> getCurrentLeader() {
-        return leaderElection.getLeaderValueIfPresent();
+        try {
+            return leaderElection.getLeaderValue().get();
+        } catch (InterruptedException | ExecutionException e) {
+            return Optional.empty();
+        }
     }
 
     public boolean isLeader() {
