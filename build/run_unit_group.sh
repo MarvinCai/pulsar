@@ -27,16 +27,21 @@ MVN_TEST_COMMAND='build/retry.sh mvn -B -ntp test'
 
 # Test Groups  -- start --
 function broker_group_1() {
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/AdminApiOffloadTest.java" \
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
                                       -DtestForkCount=1 \
                                       -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="org/apache/pulsar/broker/**/*.java" \
-                                      -Dexclude="org/apache/pulsar/broker/zookeeper/**/*.java,
-                                                 org/apache/pulsar/broker/loadbalance/**/*.java,
-                                                 org/apache/pulsar/broker/service/**/*.java,
-                                                 **/AdminApiOffloadTest.java"
-
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
+                                      -DtestForkCount=1 \
+                                      -DtestReuseFork=true
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
+                                      -DtestForkCount=1 \
+                                      -DtestReuseFork=true
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
+                                      -DtestForkCount=1 \
+                                      -DtestReuseFork=true
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/LoadBalancerTest.java" \
+                                      -DtestForkCount=1 \
+                                      -DtestReuseFork=true
 }
 
 function broker_group_2() {
