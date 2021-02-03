@@ -115,6 +115,7 @@ public class LeaderElectionImpl<T> implements LeaderElection<T>, Consumer<Notifi
                     return CompletableFuture.completedFuture(leaderElectionState);
                 }
             } else {
+                log.info("#######Trying to become leader");
                 return tryToBecomeLeader();
             }
         });

@@ -78,9 +78,11 @@ public class ZKMetadataStore extends AbstractMetadataStore implements MetadataSt
         CompletableFuture<Optional<GetResult>> future = new CompletableFuture<>();
 
         try {
+            System.out.println("Reading zk for path " + path);
             zkc.getData(path, this, (rc, path1, ctx, data, stat) -> {
                 executor.execute(() -> {
                     Code code = Code.get(rc);
+                    System.out.println(code);
                     if (code == Code.OK) {
                         future.complete(Optional.of(new GetResult(data, getStat(path1, stat))));
                     } else if (code == Code.NONODE) {

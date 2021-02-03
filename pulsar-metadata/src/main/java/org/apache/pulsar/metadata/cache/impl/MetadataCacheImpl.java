@@ -72,12 +72,14 @@ public class MetadataCacheImpl<T> implements MetadataCache<T>, Consumer<Notifica
                 .buildAsync(new AsyncCacheLoader<String, Optional<Entry<T, Stat>>>() {
                     @Override
                     public CompletableFuture<Optional<Entry<T, Stat>>> asyncLoad(String key, Executor executor) {
+                        System.out.println("Cache loading");
                         return readValueFromStore(key);
                     }
 
                     @Override
                     public CompletableFuture<Optional<Entry<T, Stat>>> asyncReload(String key,
                             Optional<Entry<T, Stat>> oldValue, Executor executor) {
+                        System.out.println("Cache reloading");
                         return readValueFromStore(key);
                     }
                 });
@@ -90,10 +92,10 @@ public class MetadataCacheImpl<T> implements MetadataCache<T>, Consumer<Notifica
                         System.out.println("@@@@@@@@@@@@@@@@@@ Got empty payload from leader election path for path " + path);
                         return FutureUtils.value(Optional.empty());
                     }
-                    System.out.println("@@@@@@@@@@@@@@@@@@ Value read from leader election path for path " + path);
 
                     try {
                         T obj = serde.deserialize(optRes.get().getValue());
+                        System.out.println("@@@@@@@@@@@@@@@@@@ Value read from leader election path for path " + path + "  " + obj);
                         return FutureUtils
                                 .value(Optional.of(new SimpleImmutableEntry<T, Stat>(obj, optRes.get().getStat())));
                     } catch (Throwable t) {

@@ -138,7 +138,7 @@ public class LoadBalancerTest {
         final String localhost = "localhost";
         // start brokers
         for (int i = 0; i < BROKER_COUNT; i++) {
-
+            System.out.println("@@@@@@@@@@@@@@Setting up  test broker " + i);
 
             ServiceConfiguration config = new ServiceConfiguration();
             config.setBrokerServicePort(Optional.ofNullable(brokerNativeBrokerPorts[i]));
@@ -727,10 +727,10 @@ public class LoadBalancerTest {
         System.arraycopy(pulsarServices, 0, allServices, 0, pulsarServices.length);
         for (int i = 0; i < BROKER_COUNT - 1; i++) {
             log.info("*********************************************Leader election loop "+ i);
-            Set<PulsarService> activePulsar = new HashSet<PulsarService>();
+            Set<PulsarService> activePulsar = new HashSet<>();
             LeaderBroker oldLeader = null;
             PulsarService leaderPulsar = null;
-            PulsarService followerPulsar = null;
+            Set<PulsarService> followers = new HashSet<>();
             for (int j = 0; j < BROKER_COUNT; j++) {
                 if (allServices[j].getState() != PulsarService.State.Closed) {
                     activePulsar.add(allServices[j]);
@@ -742,7 +742,7 @@ public class LoadBalancerTest {
                         // in order to prevent closing this PulsarService twice
                         pulsarServices[i] = null;
                     } else {
-                        followerPulsar = allServices[j];
+                        followers.add(allServices[j]);
                     }
                 }
             }
@@ -762,8 +762,8 @@ public class LoadBalancerTest {
 
             // Do leader election by killing the leader broker
             leaderPulsar.close();
-            loopUntilLeaderSettles(activePulsar, oldLeader);
-            LeaderBroker newLeader = activePulsar.toArray(new PulsarService[activePulsar.size()])[0].getLeaderElectionService().getCurrentLeader().get();
+            loopUntilLeaderSettles(followers, oldLeader);
+            LeaderBroker newLeader = followers.toArray(new PulsarService[followers.size()])[0].getLeaderElectionService().getCurrentLeader().get();
             log.info("*********************************************New leader is " + newLeader.getServiceUrl());
             Assert.assertNotEquals(newLeader, oldLeader);
         }

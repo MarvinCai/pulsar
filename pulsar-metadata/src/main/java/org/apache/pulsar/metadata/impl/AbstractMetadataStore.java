@@ -65,7 +65,7 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
 
     protected AbstractMetadataStore() {
         this.executor = Executors
-                .newSingleThreadExecutor(new DefaultThreadFactory("metadata-store"));
+                .newFixedThreadPool(3, new DefaultThreadFactory("metadata-store"));
         registerListener(this);
 
         this.childrenCache = Caffeine.newBuilder()
