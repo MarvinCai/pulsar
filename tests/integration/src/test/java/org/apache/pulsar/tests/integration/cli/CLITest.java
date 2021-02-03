@@ -88,6 +88,9 @@ public class CLITest extends PulsarTestSuite {
                 "--subscription",
                 "" + subscriptionPrefix + i
             );
+            System.out.println("stdout: " + result.getStdout());
+            System.out.println("sterror: " + result.getStderr());
+
             assertTrue(result.getStdout().isEmpty());
             assertTrue(result.getStderr().isEmpty());
             i++;
