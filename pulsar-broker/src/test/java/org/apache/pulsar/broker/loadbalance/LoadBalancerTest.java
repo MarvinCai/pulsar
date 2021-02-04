@@ -86,6 +86,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
+import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -179,16 +180,25 @@ public class LoadBalancerTest {
     private LeaderBroker loopUntilLeaderChanges(LeaderElectionService les, LeaderBroker oldLeader,
             LeaderBroker newLeader) throws InterruptedException {
         int loopCount = 0;
-
-        while (loopCount < MAX_RETRIES) {
-            Thread.sleep(1000);
-            // Check if the new leader is elected. If yes, break without incrementing the loopCount
-            newLeader = les.getCurrentLeader().get();
-            if (newLeader.equals(oldLeader) == false) {
-                break;
+        Awaitility.await().atMost(30, TimeUnit.SECONDS).until(() -> {
+                    if (!les.getCurrentLeader().isPresent()) {
+                        System.out.println("****Empty");
+                    } else {
+                        System.out.println("********" + les.getCurrentLeader().get());
+                    }
+                return les.getCurrentLeader().isPresent() && !les.getCurrentLeader().get().equals(oldLeader);
             }
-            ++loopCount;
-        }
+        );
+        newLeader = les.getCurrentLeader().get();
+//        while (loopCount < MAX_RETRIES) {
+//            Thread.sleep(1000);
+//            // Check if the new leader is elected. If yes, break without incrementing the loopCount
+//            newLeader = les.getCurrentLeader().get();
+//            if (newLeader.equals(oldLeader) == false) {
+//                break;
+//            }
+//            ++loopCount;
+//        }
 
         // Check if maximum retries are already done. If yes, assert.
         Assert.assertNotEquals(loopCount, MAX_RETRIES, "Leader is not changed even after maximum retries.");

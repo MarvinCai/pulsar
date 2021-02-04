@@ -127,28 +127,36 @@ function proxy() {
 }
 
 function other() {
-  build/retry.sh mvn -B -ntp install -PbrokerSkipTest \
-                                     -Dexclude="org/apache/pulsar/proxy/**/*.java,
-                                                **/ManagedLedgerTest.java,
-                                                **/TestPulsarKeyValueSchemaHandler.java,
-                                                **/PrimitiveSchemaTest.java,
-                                                BlobStoreManagedLedgerOffloaderTest.java"
-
-  $MVN_TEST_COMMAND -pl managed-ledger -Dinclude="**/ManagedLedgerTest.java" \
-                                       -DtestForkCount=1 \
-                                       -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-sql/presto-pulsar-plugin -Dinclude="**/TestPulsarKeyValueSchemaHandler.java" \
-                                                        -DtestForkCount=1 \
-                                                        -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-client -Dinclude="**/PrimitiveSchemaTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl tiered-storage/jcloud -Dinclude="**/BlobStoreManagedLedgerOffloaderTest.java" \
-                                              -DtestForkCount=1 \
-                                              -DtestReuseFork=true
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
+  mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
+                                              -DredirectTestOutputToFile=false \
+                                              -DintegrationTests
 }
 
 # Test Groups  -- end --
