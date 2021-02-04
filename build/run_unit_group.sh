@@ -128,35 +128,25 @@ function proxy() {
 
 function other() {
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
   mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -Dinclude="**/CLITest.java" \
-                                              -DredirectTestOutputToFile=false \
-                                              -DintegrationTests
+                                              -DredirectTestOutputToFile=false
 }
 
 # Test Groups  -- end --
