@@ -62,7 +62,7 @@ public class PulsarClusterSpec {
      * @return number of brokers.
      */
     @Default
-    int numBrokers = 2;
+    int numBrokers = 3;
 
     /**
      * Returns number of proxies.
