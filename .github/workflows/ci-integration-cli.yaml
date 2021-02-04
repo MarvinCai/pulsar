@@ -116,3 +116,19 @@ jobs:
       - name: run pulsar cli integration tests 6
         if: steps.docs.outputs.changed_only == 'no'
         run: mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -DintegrationTests -DredirectTestOutputToFile=false
+
+      - name: run pulsar cli integration tests 7
+        if: steps.docs.outputs.changed_only == 'no'
+        run: mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -DintegrationTests -DredirectTestOutputToFile=false
+
+      - name: run pulsar cli integration tests 8
+        if: steps.docs.outputs.changed_only == 'no'
+        run: mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -DintegrationTests -DredirectTestOutputToFile=false
+
+      - name: run pulsar cli integration tests 9
+        if: steps.docs.outputs.changed_only == 'no'
+        run: mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -DintegrationTests -DredirectTestOutputToFile=false
+
+      - name: run pulsar cli integration tests 10
+        if: steps.docs.outputs.changed_only == 'no'
+        run: mvn -B -f tests/pom.xml test -DintegrationTestSuiteFile=pulsar-cli.xml -DintegrationTests -DredirectTestOutputToFile=false
