@@ -566,6 +566,8 @@ public class PulsarService implements AutoCloseable {
                     "org.apache.pulsar.broker.admin.v3", true, attributeMap);
             this.webService.addRestResources("/lookup",
                     "org.apache.pulsar.broker.lookup", true, attributeMap);
+            this.webService.addRestResources("/topics",
+                    "org.apache.pulsar.broker.rest", true, attributeMap);
             this.metricsServlet = new PrometheusMetricsServlet(
                     this, config.isExposeTopicLevelMetricsInPrometheus(),
                     config.isExposeConsumerLevelMetricsInPrometheus());
