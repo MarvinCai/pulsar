@@ -1841,10 +1841,10 @@ public class ServiceConfiguration implements PulsarConfiguration {
 
     @FieldContext(
             category = CATEGORY_METRICS,
-            doc = "Enable expose the backlog size fro each subscription when generating stats.\n" +
+            doc = "Enable expose the backlog size for each subscription when generating stats.\n" +
                     " Locking is used for fetching the status so default to false."
     )
-    private boolean exposeSubscriptionBacklokSizeInPrometheus = false;
+    private boolean exposeSubscriptionBacklogSizeInPrometheus = false;
 
     /**** --- Functions --- ****/
     @FieldContext(

@@ -904,6 +904,11 @@ public class PersistentSubscription implements Subscription {
         expiryMonitor.expireMessages(messageTTLInSeconds);
     }
 
+    @Override
+    public void expireMessages(Position position) {
+        expiryMonitor.expireMessages(position);
+    }
+
     public double getExpiredMessageRate() {
         return expiryMonitor.getMessageExpiryRate();
     }
@@ -957,7 +962,8 @@ public class PersistentSubscription implements Subscription {
         }
         subStats.msgBacklog = getNumberOfEntriesInBacklog(getPreciseBacklog);
         if (subscriptionBacklogSize) {
-            subStats.backlogSize = ((ManagedLedgerImpl) topic.getManagedLedger()).getEstimatedBacklogSize((PositionImpl) cursor.getMarkDeletedPosition());
+            subStats.backlogSize = ((ManagedLedgerImpl) topic.getManagedLedger())
+                    .getEstimatedBacklogSize((PositionImpl) cursor.getMarkDeletedPosition());
         }
         subStats.msgBacklogNoDelayed = subStats.msgBacklog - subStats.msgDelayed;
         subStats.msgRateExpired = expiryMonitor.getMessageExpiryRate();
