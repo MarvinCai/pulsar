@@ -40,34 +40,30 @@ function broker_group_1() {
 }
 
 function broker_group_2() {
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/MessagePublishBufferThrottleTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
   $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/TopicOwnerTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/AntiAffinityNamespaceGroupTest.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/*StreamingDispatcher*Test.java" \
-                                      -DtestForkCount=1 \
-                                      -DtestReuseFork=true
-
-  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="org/apache/pulsar/broker/zookeeper/**/*.java,
-                                                 org/apache/pulsar/broker/loadbalance/**/*.java,
-                                                 org/apache/pulsar/broker/service/**/*.java" \
-                                      -Dexclude="**/ReplicatorTest.java,
-                                                 **/MessagePublishBufferThrottleTest.java,
-                                                 **/TopicOwnerTest.java,
-                                                 **/*StreamingDispatcher*Test.java,
-                                                 **/AntiAffinityNamespaceGroupTest.java"
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
+  $MVN_TEST_COMMAND -pl pulsar-broker -Dinclude="**/ReplicatorTest.java" \
+                                      -DredirectTestOutputToFile=false
 }
 
 function broker_client_api() {
