@@ -993,6 +993,6 @@ public class ReplicatorTest extends ReplicatorTestBase {
 //        nonPersistentProducer2.close();
 //    }
 //
-//    private static final Logger log = LoggerFactory.getLogger(ReplicatorTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ReplicatorTest.class);
 
 }
